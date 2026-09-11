@@ -329,7 +329,7 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
 function PlaceCard({ item, status, mode, detail, detailLoading, onDetail }: { item: Item; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
   return (
     <article className="place-card" data-place-id={item.placeId} data-status={status}>
-      <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading} aria-label={`ดูรายละเอียด ${item.place.name}`}>
+      <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading}>
         <span className="place-title"><strong>{item.place.name}</strong></span>
         <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
         <span className="metric-list">
