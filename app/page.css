@@ -25,7 +25,7 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
 .section-kicker { display: flex; gap: 12px; align-items: center; margin-bottom: 22px; }
 .section-kicker span { color: var(--blue); font: 600 20px Georgia, serif; }
 .section-kicker h2 { margin: 0; font-size: 22px; }
-.search-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 18px; }
+.search-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .field label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
 .field, .search-grid { min-width: 0; }
 .ant-picker-range { min-width: 0 !important; max-width: 100%; }

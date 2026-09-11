@@ -78,7 +78,6 @@ export default function Home() {
   const [showLanding, setShowLanding] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null);
-  const [period, setPeriod] = useState("all");
   const [results, setResults] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +144,7 @@ export default function Home() {
         body: JSON.stringify({
           dates: range ? { startDate: range[0].format("YYYY-MM-DD"), endDate: range[1].format("YYYY-MM-DD") } : null,
           tripDays: profile.tripDays,
-          period,
+          period: "all",
           preferences: { temperature: profile.temperature, rain: profile.rain, air: profile.air },
           requirements: { placeType: "national_park" },
         }),
@@ -232,10 +231,6 @@ export default function Home() {
               style={{ width: "100%" }}
             />
             {!range && <small className="field-help">ไม่เลือกวัน: ค้นหาช่วงดีที่สุดภายใน 30 วัน · เริ่มต้น {profile?.tripDays ?? defaultProfile.tripDays} วัน</small>}
-          </div>
-          <div className="field">
-            <label>ช่วงเวลาที่ชอบ</label>
-            <Select size="large" value={period} onChange={setPeriod} options={[{ value: "all", label: "ทั้งวัน" }, { value: "day", label: "กลางวัน" }, { value: "night", label: "กลางคืน" }]} style={{ width: "100%" }} />
           </div>
         </div>
         <div className="search-footer">
