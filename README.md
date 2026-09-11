@@ -13,4 +13,6 @@ Start `wellness-travel-api` separately and set its `CORS_ORIGIN` to the web orig
 
 For Vercel, deploy this directory as a separate Next.js project and set `NEXT_PUBLIC_API_BASE` to the deployed API origin (for example, `https://wellness-travel-api-<team>.vercel.app`). The API origin must not include a trailing slash.
 
-The UI keeps provider, dataset, and coordinate provenance visible. Flexible searches are historical Seasonal recommendations; explicit dates use the checked-in Open-Meteo/CAMS forecast snapshots and show incomplete coverage when a factor is unavailable. The app does not expose a Supabase service key.
+The UI keeps the place coordinate caveat visible. Provider and dataset provenance remain in the API response and test evidence rather than on the detail screen. Flexible searches are historical Seasonal recommendations; explicit dates use the checked-in Open-Meteo/CAMS forecast snapshots and show incomplete coverage when a factor is unavailable. The app does not expose a Supabase service key.
+
+Selecting any recommendation card opens `/places/<place-id>/detail`. The page sends the card's scoring context to `POST /v1/recommendations/detail`, shows Forecast or Seasonal details without a rank, and includes a MapLibre/OpenFreeMap map with the place reference point and the user's route when geolocation is available.

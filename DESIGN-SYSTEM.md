@@ -21,7 +21,7 @@ The SVG illustrations from `exam-plan/ux/assets/` are copied into `public/assets
 - `forest.svg`: inspiration card and alternating recommendation card art.
 - `lake.svg`: inspiration card and alternating recommendation card art.
 
-These are supplied demo illustrations, so the UI does not imply that they are photographs of a specific park. The card keeps the summary compact; place names focus the corresponding map marker and do not expand an inline detail panel.
+These are supplied demo illustrations, so the UI does not imply that they are photographs of a specific park. The card keeps the summary compact; selecting a card opens the dedicated detail page while map-list controls continue to focus the corresponding marker.
 
 ## Component map
 
@@ -33,7 +33,8 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | Inspiration | `.inspiration-section`, `.group-cards`, `.place-card` | Show the six highest-scoring recommendations returned for the fixed system baseline using the same card template as search results. |
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
-| Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |
+| Map focus | `.map-marker`, `.map-place` | Selecting a map item flies the map to that marker; cards open the dedicated detail route. |
+| Place detail | `.detail-page`, `.detail-hero-card`, `.detail-score-card`, `.detail-section`, `.detail-map-section` | Explain one place with its score context, overview, and user-to-place route; Forecast adds daily/hourly detail. |
 | Preferences | `.panel-backdrop`, `.profile-panel` | Edit saved user preferences, including the default 1–30 day flexible-trip length; cancel restores the last saved value. |
 
 ## Responsive rules
@@ -51,6 +52,11 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 3. `national_park` is the only hard requirement. Temperature, rain, and AQI affect scores and explanations.
 4. Result status is explicit: `ผ่านเงื่อนไขและข้อมูลครบ`, `ข้อมูลยังไม่ครบ`, or `ไม่ตรงเงื่อนไข`.
 5. Selecting a place name calls `flyTo` with the current zoom. On mobile the map is read-only (no pan, zoom, rotate, touch, or keyboard map interactions); tablet and desktop keep map controls enabled.
-6. Loading, API error, no-result, and incomplete-data states retain the same spacing and focus behavior as the normal state.
-7. After a profile is saved, the home page requests the flexible 30-day recommendation with `period: "day"` and `scoringProfile: "system"`; the API applies the 25–30°C, no-rain, equal-weight baseline, sorts national parks by that score, and shows the first six places. Search requests use `scoringProfile: "user"` with the saved preferences. The card date range is the API-selected best window; the home list is a recommendation preview, not a replacement for the full result groups.
-8. The saved-preference summary chip stays hidden while the homepage shows `สถานที่แนะนำ`; it appears in the search card only after results load, where the page is `สถานที่สำหรับคุณ` or a dated trip result.
+6. Each result group keeps the API order (score descending, then coverage and stable tie-breaks). The cards, map list, and marker input use the same flattened sequence; catalog places missing from the response are appended by `placeId` without an invented score.
+7. Every recommendation card opens `/places/{id}/detail` and carries the card context (`mode`, `scoringProfile`, `startDate`, `endDate`, `period`, `tripDays`). The detail endpoint recalculates the item; the browser never trusts a card score.
+8. Detail pages show no rank. User-profile scores carry `* คิดคะแนนจากความชอบของผู้ใช้`, while system scores carry `* คิดคะแนนจากค่ากลางระบบ`; missing values render `-`. The score card includes the API total score, a visual badge/review summary, and three presentation-only sub-scores. Forecast adds daily/hourly detail; detail pages do not show provenance or historical/seasonal trend blocks. All statuses can open the page without an additional failure-reason panel.
+9. Detail maps show the reference place marker, the user's geolocation when permitted, and a route line. The map always uses `fitBounds`: it fits both endpoints when user location is available and a padded viewport around the place otherwise. A routing-service distance is preferred; a straight-line fallback is labelled. The place coordinate is always described as a reference point, never as a verified campsite location.
+10. Direct detail URLs without search context use the saved profile and a default two-day window within the 30-day policy. Without a saved user profile, show the setup-required state. Browser Back restores the previous search route; the latest result is kept in session storage to avoid an unnecessary new request.
+11. Loading, API error, no-result, and incomplete-data states retain the same spacing and focus behavior as the normal state.
+12. After a profile is saved, the home page requests the flexible 30-day recommendation with `period: "day"` and `scoringProfile: "system"`; the API applies the 25–30°C, no-rain, equal-weight baseline, sorts national parks by that score, and shows the first six places. Search requests use `scoringProfile: "user"` with the saved preferences. The card date range is the API-selected best window; the home list is a recommendation preview, not a replacement for the full result groups.
+13. The saved-preference summary chip stays hidden while the homepage shows `สถานที่แนะนำ`; it appears in the search card only after results load, where the page is `สถานที่สำหรับคุณ` or a dated trip result.

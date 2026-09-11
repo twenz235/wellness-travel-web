@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import dayjs, { Dayjs } from "dayjs";
 import { Alert, Button, DatePicker, Form, InputNumber, Pagination, Select, Spin, Tag } from "antd";
 import { ArrowRightOutlined, EnvironmentOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
@@ -70,7 +71,23 @@ function shortDateRange(start: string, end: string) {
   return start === end ? format(start) : `${format(start)}–${format(end)}`;
 }
 
+function orderedMapPlaces(items: Item[], catalogPlaces: Place[]) {
+  const ordered: Place[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (!item.place || seen.has(item.place.id)) continue;
+    seen.add(item.place.id);
+    ordered.push(item.place);
+  }
+  catalogPlaces
+    .filter((place) => !seen.has(place.id))
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .forEach((place) => ordered.push(place));
+  return ordered;
+}
+
 export default function Home() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileDraft, setProfileDraft] = useState<Profile>(defaultProfile);
   const [showLanding, setShowLanding] = useState(true);
@@ -104,6 +121,16 @@ export default function Home() {
       }
     } catch {
       window.localStorage.removeItem("wellness-profile");
+    }
+    try {
+      const savedSearch = window.sessionStorage.getItem("wellness-search-state");
+      if (savedSearch) {
+        const parsed = JSON.parse(savedSearch) as { results?: ApiResponse; range?: { startDate: string; endDate: string } | null };
+        if (parsed.results) setResults(parsed.results);
+        if (parsed.range?.startDate && parsed.range?.endDate) setRange([dayjs(parsed.range.startDate), dayjs(parsed.range.endDate)]);
+      }
+    } catch {
+      window.sessionStorage.removeItem("wellness-search-state");
     }
     fetch(`${API_BASE}/v1/capabilities`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("capabilities unavailable"))))
@@ -196,6 +223,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error?.code ?? "ค้นหาไม่สำเร็จ");
       setResults(data as ApiResponse);
+      window.sessionStorage.setItem("wellness-search-state", JSON.stringify({ results: data, range: range ? { startDate: range[0].format("YYYY-MM-DD"), endDate: range[1].format("YYYY-MM-DD") } : null }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "ค้นหาไม่สำเร็จ");
     } finally {
@@ -221,6 +249,18 @@ export default function Home() {
     setError(null);
   }
 
+  function openDetail(item: Item, scoringProfile: "system" | "user", mode: string, period = "all") {
+    const params = new URLSearchParams({
+      startDate: item.startDate,
+      endDate: item.endDate,
+      mode,
+      scoringProfile,
+      period,
+      tripDays: String(profile?.tripDays ?? 2),
+    });
+    router.push(`/places/${encodeURIComponent(item.placeId)}/detail?${params.toString()}`);
+  }
+
   if (showLanding) {
     return (
       <main className="landing-page">
@@ -243,6 +283,8 @@ export default function Home() {
 
   const activeGroup = results?.groups.find((group) => group.items.length > 0) ?? results?.groups[0];
   const resultGroups = results?.groups.filter((group) => group.items.length > 0) ?? [];
+  const orderedResultItems = resultGroups.flatMap((group) => group.items);
+  const orderedPlaces = orderedMapPlaces(orderedResultItems, catalogPlaces);
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -254,7 +296,7 @@ export default function Home() {
         <div className="hero-copy">
           <p className="eyebrow">A LITTLE CLOSER TO NATURE</p>
           <h1>วันว่างของคุณ<br /><em>ให้ธรรมชาติดูแล</em></h1>
-          <p>หามุมพักใจ ในวันที่อากาศเป็นใจ<br />ตามความชอบในแบบของคุณ</p>
+          <p>หามุมพักใจ ในวันที่อากาศเป็นใจ ในแบบของคุณ</p>
         </div>
         <img className="hero-art" src="/assets/mountains.svg" alt="ภาพวาดภูเขาประกอบบรรยากาศ" />
       </section>
@@ -285,7 +327,7 @@ export default function Home() {
         <div className="results-heading"><div><h2>สถานที่แนะนำ</h2></div></div>
         {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่จากค่ากลางของระบบ…</span></div>}
         {!homeLoading && homeItems.length > 0 && <div className="group-cards home-recommendation-grid">
-          {homeItems.map((item, index) => <PlaceCard item={item} index={index} key={`home-${item.placeId}`} />)}
+          {homeItems.map((item, index) => <PlaceCard item={item} index={index} onOpenDetail={(selected) => openDetail(selected, "system", "seasonal", "day")} key={`home-${item.placeId}`} />)}
         </div>}
         {!homeLoading && homeItems.length === 0 && <p className="journal-note">กดค้นหาเพื่อดูสถานที่ที่ตรงกับความชอบของคุณ</p>}
       </section>}
@@ -301,9 +343,9 @@ export default function Home() {
           </div>
           <div className="results-layout">
             <div className="cards-grid">
-              {resultGroups.map((group) => <ResultGroup group={group} paginated={results.search.kind === "flexible"} onSelectPlace={(place) => setFocusedPlaceId(place.id)} key={`${results.requestId}-${group.mode}-${group.status}`} />)}
+              {resultGroups.map((group) => <ResultGroup group={group} paginated={results.search.kind === "flexible"} onOpenDetail={(item) => openDetail(item, results.search.scoringProfile ?? "user", group.mode)} key={`${results.requestId}-${group.mode}-${group.status}`} />)}
             </div>
-            <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} focusPlaceId={focusedPlaceId} onFocusPlace={setFocusedPlaceId} />
+            <MapPanel places={orderedPlaces} focusPlaceId={focusedPlaceId} onFocusPlace={setFocusedPlaceId} />
           </div>
         </section>
       )}
@@ -318,9 +360,7 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   return (
     <div className="panel-backdrop" role="dialog" aria-modal="true" aria-label="ตั้งค่าความชอบ">
       <div className="profile-panel">
-        <p className="eyebrow">ตั้งครั้งเดียว ใช้ค้นหาครั้งต่อไป</p>
         <h2>ความชอบของฉัน</h2>
-        <p className="panel-intro">บอกสภาพที่ทำให้คุณพักได้เต็มที่ ระบบจะใช้ค่านี้จัดอันดับทุกครั้ง</p>
         <Form layout="vertical">
           <Form.Item label="ระยะทริปเมื่อไม่เลือกวัน">
             <Select size="large" value={draft.tripDays} onChange={(v) => setDraft({ ...draft, tripDays: v })} options={Array.from({ length: 30 }, (_, index) => index + 1).map((v) => ({ value: v, label: `${v} วัน` }))} />
@@ -341,14 +381,22 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   );
 }
 
-function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; onSelectPlace?: (place: Place) => void }) {
+function PlaceCard({ item, index, onOpenDetail }: { item: Item; index: number; onOpenDetail?: (item: Item) => void }) {
   const image = index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg";
   const summary = <>
     <span className="place-title"><strong>{item.place.name}</strong></span>
     <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
   </>;
   return (
-    <article className="place-card" data-place-id={item.placeId}>
+    <article
+      className={`place-card${onOpenDetail ? " place-card-clickable" : ""}`}
+      data-place-id={item.placeId}
+      role={onOpenDetail ? "link" : undefined}
+      tabIndex={onOpenDetail ? 0 : undefined}
+      aria-label={onOpenDetail ? `เปิดรายละเอียด ${item.place.name}` : undefined}
+      onClick={onOpenDetail ? () => onOpenDetail(item) : undefined}
+      onKeyDown={onOpenDetail ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpenDetail(item); } } : undefined}
+    >
       <div className="place-art-frame">
         <img className="place-art" src={image} alt="" aria-hidden="true" />
         <div className="metric-list place-overlay" aria-label="สรุปสภาพอากาศ">
@@ -357,18 +405,18 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
           <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><span className="metric-icon metric-icon-air" aria-hidden="true" /></span>
         </div>
       </div>
-      {onSelectPlace ? <button type="button" className="place-card-button" onClick={() => onSelectPlace(item.place)} aria-label={`ดู ${item.place.name} บนแผนที่`}>{summary}</button> : <div className="place-card-button">{summary}</div>}
+      <div className="place-card-button">{summary}</div>
     </article>
   );
 }
 
-function ResultGroup({ group, paginated, onSelectPlace }: { group: { mode: string; status: string; items: Item[] }; paginated: boolean; onSelectPlace: (place: Place) => void }) {
+function ResultGroup({ group, paginated, onOpenDetail }: { group: { mode: string; status: string; items: Item[] }; paginated: boolean; onOpenDetail: (item: Item) => void }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_RESULT_PAGE_SIZE);
   const visibleItems = paginated ? group.items.slice((page - 1) * pageSize, page * pageSize) : group.items;
   return <div className="result-group">
     {group.status !== "matched" && <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>}
-    <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onSelectPlace={onSelectPlace} key={`${group.status}-${item.placeId}`} />)}</div>
+    <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onOpenDetail={onOpenDetail} key={`${group.status}-${item.placeId}`} />)}</div>
     {paginated && group.items.length > DEFAULT_RESULT_PAGE_SIZE && <div className="results-pagination"><Pagination current={page} pageSize={pageSize} total={group.items.length} onChange={setPage} onShowSizeChange={(_, nextPageSize) => { setPage(1); setPageSize(nextPageSize); }} pageSizeOptions={RESULT_PAGE_SIZES.map(String)} showSizeChanger responsive showLessItems /></div>}
   </div>;
 }
