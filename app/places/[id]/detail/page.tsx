@@ -270,7 +270,7 @@ function DetailContent({ item, status, scoringProfile, requestedMode, profile }:
         {profile && scoringProfile === "user" && <p className="detail-preference-note">ความชอบที่ใช้: {profile.temperature.minC}–{profile.temperature.maxC}°C · {rainPreferenceLabel(profile.rain.preference)}</p>}
       </section>
 
-      <section className="detail-map-section detail-section" aria-label="เส้นทางไปสถานที่">
+      <section className="detail-map-section detail-section" aria-label="แผนที่ตำแหน่งสถานที่">
         <DetailMap place={item.place} />
       </section>
 
@@ -397,7 +397,7 @@ function DetailMap({ place }: { place: Place }) {
   }, [mapReady, route]);
 
   return <div className="detail-map-wrap">
-    <div ref={mapContainerRef} className="detail-map-canvas" aria-label={`แผนที่เส้นทางไป ${place.name}`} />
+    <div ref={mapContainerRef} className="detail-map-canvas" aria-label={`แผนที่ตำแหน่ง ${place.name}`} />
     <div className="detail-map-legend"><span><i className="legend-dot legend-user" /> ตำแหน่งของฉัน</span><span><i className="legend-dot legend-place" /> {place.name}</span></div>
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" />}
     <div className="detail-route-summary"><div><strong>{route ? `${route.distanceKm.toFixed(1)} กม.` : "-"}</strong><span>ระยะทางโดยประมาณ</span></div><div className="route-status">{locationState === "ready" ? "มีตำแหน่งผู้ใช้" : locationState === "loading" ? "กำลังอ่านตำแหน่ง…" : "ยังไม่มีตำแหน่งผู้ใช้"}<Button type="link" size="small" onClick={requestLocation}>ใช้ตำแหน่งของฉัน</Button></div></div>
