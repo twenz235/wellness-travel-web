@@ -99,7 +99,7 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
   .map-panel { position: static; }
   .group-cards, .inspiration-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 760px) {
+@media (max-width: 639px) {
   .landing-page { display: flex; flex-direction: column; align-items: stretch; padding: 26px 20px; gap: 20px; }
   .landing-copy, .landing-postcard, .landing-button, .landing-note { width: 100%; max-width: none; }
   .landing-copy { order: 0; }
