@@ -372,7 +372,7 @@ function ResultGroup({ group, onSelectPlace }: { group: { mode: string; status: 
   }, [group.items.length, visibleCount]);
   const visibleItems = group.items.slice(0, visibleCount);
   return <div className="result-group">
-    <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
+    {group.status !== "matched" && <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>}
     <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onSelectPlace={onSelectPlace} key={`${group.status}-${item.placeId}`} />)}</div>
     {visibleCount < group.items.length && <div ref={sentinelRef} className="lazy-sentinel" aria-label="กำลังเตรียมสถานที่เพิ่มเติม">เลื่อนลงเพื่อดูสถานที่เพิ่มเติม</div>}
   </div>;
