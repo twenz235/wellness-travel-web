@@ -258,7 +258,7 @@ export default function Home() {
             <div className="cards-grid">
               {resultGroups.map((group) => <ResultGroup group={group} onSelectPlace={(place) => setFocusedPlaceId(place.id)} key={`${group.mode}-${group.status}`} />)}
             </div>
-            <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} focusPlaceId={focusedPlaceId} />
+            <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} focusPlaceId={focusedPlaceId} onFocusPlace={setFocusedPlaceId} />
           </div>
         </section>
       )}
@@ -332,7 +332,7 @@ function ResultGroup({ group, onSelectPlace }: { group: { mode: string; status: 
   </div>;
 }
 
-function MapPanel({ places, focusPlaceId }: { places: Place[]; focusPlaceId: string | null }) {
+function MapPanel({ places, focusPlaceId, onFocusPlace }: { places: Place[]; focusPlaceId: string | null; onFocusPlace: (placeId: string) => void }) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const [mapError, setMapError] = useState(false);
@@ -392,7 +392,7 @@ function MapPanel({ places, focusPlaceId }: { places: Place[]; focusPlaceId: str
     <div ref={mapContainerRef} className="map-canvas" aria-label="แผนที่จุดหมายประเทศไทย" />
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" description="รายการสถานที่ยังใช้งานได้ ตรวจพิกัดได้จากรายการด้านล่าง" />}
     <div className="map-place-list" aria-label="รายการจุดอ้างอิงจาก catalog">
-      {uniquePlaces.map((place) => <div className="map-place" data-place-id={place.id} key={place.id}><span>{place.name}</span><small>{place.latitude.toFixed(4)}, {place.longitude.toFixed(4)}</small></div>)}
+      {uniquePlaces.map((place) => <button type="button" className="map-place" data-place-id={place.id} onClick={() => onFocusPlace(place.id)} aria-label={`โฟกัส ${place.name} บนแผนที่`} key={place.id}><span>{place.name}</span><small>{place.latitude.toFixed(4)}, {place.longitude.toFixed(4)}</small></button>)}
     </div>
   </div>;
 }
