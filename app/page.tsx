@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
-import { Alert, Button, DatePicker, Form, InputNumber, Select, Spin, Tag } from "antd";
+import { Alert, Button, DatePicker, Form, InputNumber, Pagination, Select, Spin, Tag } from "antd";
 import { ArrowRightOutlined, CloudDownloadOutlined, EnvironmentOutlined, FireOutlined, HeatMapOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
 import "./page.css";
 
@@ -57,6 +57,7 @@ const defaultProfile: Profile = {
   rain: { preference: "light", weight: 1 },
   air: { weight: 3 },
 };
+const RESULT_PAGE_SIZE = 12;
 
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
 
@@ -299,7 +300,7 @@ export default function Home() {
           </div>
           <div className="results-layout">
             <div className="cards-grid">
-              {resultGroups.map((group) => <ResultGroup group={group} onSelectPlace={(place) => setFocusedPlaceId(place.id)} key={`${group.mode}-${group.status}`} />)}
+              {resultGroups.map((group) => <ResultGroup group={group} paginated={results.search.kind === "flexible"} onSelectPlace={(place) => setFocusedPlaceId(place.id)} key={`${results.requestId}-${group.mode}-${group.status}`} />)}
             </div>
             <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} focusPlaceId={focusedPlaceId} onFocusPlace={setFocusedPlaceId} />
           </div>
@@ -360,22 +361,13 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
   );
 }
 
-function ResultGroup({ group, onSelectPlace }: { group: { mode: string; status: string; items: Item[] }; onSelectPlace: (place: Place) => void }) {
-  const [visibleCount, setVisibleCount] = useState(9);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (visibleCount >= group.items.length || !sentinelRef.current) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) setVisibleCount((count) => Math.min(count + 9, group.items.length));
-    }, { rootMargin: "320px" });
-    observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
-  }, [group.items.length, visibleCount]);
-  const visibleItems = group.items.slice(0, visibleCount);
+function ResultGroup({ group, paginated, onSelectPlace }: { group: { mode: string; status: string; items: Item[] }; paginated: boolean; onSelectPlace: (place: Place) => void }) {
+  const [page, setPage] = useState(1);
+  const visibleItems = paginated ? group.items.slice((page - 1) * RESULT_PAGE_SIZE, page * RESULT_PAGE_SIZE) : group.items;
   return <div className="result-group">
     {group.status !== "matched" && <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>}
     <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onSelectPlace={onSelectPlace} key={`${group.status}-${item.placeId}`} />)}</div>
-    {visibleCount < group.items.length && <div ref={sentinelRef} className="lazy-sentinel" aria-label="กำลังเตรียมสถานที่เพิ่มเติม">เลื่อนลงเพื่อดูสถานที่เพิ่มเติม</div>}
+    {paginated && group.items.length > RESULT_PAGE_SIZE && <div className="results-pagination"><Pagination current={page} pageSize={RESULT_PAGE_SIZE} total={group.items.length} onChange={setPage} showSizeChanger={false} responsive showLessItems /></div>}
   </div>;
 }
 
