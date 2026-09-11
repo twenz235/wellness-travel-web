@@ -9,6 +9,7 @@ This is the implementation reference for the new web version. It translates the 
 - **Text:** `#203b38` (`--color-ink` / `--ink`); supporting text uses `#64736f` (`--color-muted` / `--muted`).
 - **Accent:** `#24657a` (`--color-accent` / `--blue`); dark action buttons use the ink color.
 - **Typography:** system Thai sans-serif for UI text; Georgia is reserved for the italic editorial emphasis (`em`).
+- **Icons:** use Ant Design icons with semantic meaning: `SearchOutlined` for the search action, `FireOutlined` for temperature, `CloudDownloadOutlined` for rain, and `HeatMapOutlined` for the AQI summary.
 
 Tokens live in `app/globals.css`. Spacing uses a 4px base (`--space-1` through `--space-7`), controls use `--radius-control`, cards use `--radius-card`, and modal/search panels use `--radius-panel`. Keep focus indicators visible and preserve a minimum 44px interactive target.
 
