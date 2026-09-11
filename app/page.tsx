@@ -288,7 +288,7 @@ export default function Home() {
             <div className="cards-grid">
               {resultGroups.map((group) => <div className="result-group" key={`${group.mode}-${group.status}`}>
                 <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
-                {group.items.map((item) => <PlaceCard item={item} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => loadDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}
+                {group.items.map((item, index) => <PlaceCard item={item} index={index} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => loadDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}
               </div>)}
             </div>
             <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} />
@@ -326,9 +326,10 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   );
 }
 
-function PlaceCard({ item, status, mode, detail, detailLoading, onDetail }: { item: Item; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
+function PlaceCard({ item, index, status, mode, detail, detailLoading, onDetail }: { item: Item; index: number; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
   return (
     <article className="place-card" data-place-id={item.placeId} data-status={status}>
+      <div className={`place-art art-${(index % 4) + 1}`} aria-hidden="true"><EnvironmentOutlined /></div>
       <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading}>
         <span className="place-title"><strong>{item.place.name}</strong></span>
         <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>

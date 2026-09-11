@@ -73,6 +73,13 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
 .place-card-button:hover { background: #f8fbf8; }
 .place-card-button:focus-visible { outline: 3px solid #4c8991; outline-offset: -3px; }
 .place-card-button:disabled { cursor: wait; opacity: .7; }
+.place-card .place-art { min-height: 145px; padding: 16px; display: flex; justify-content: flex-end; align-items: flex-start; color: #fff; background: linear-gradient(145deg, #89b2b6, #2e6471); position: relative; overflow: hidden; }
+.place-card .place-art::after { content: ""; position: absolute; width: 140%; height: 90%; bottom: -48%; left: -18%; background: #d7e9db99; transform: rotate(-11deg); border-radius: 50%; }
+.place-card .place-art .anticon { position: relative; z-index: 1; font-size: 22px; }
+.place-card .place-art.art-1 { background: linear-gradient(145deg, #9db693, #52766b); }
+.place-card .place-art.art-2 { background: linear-gradient(145deg, #a4c6d1, #4e7b98); }
+.place-card .place-art.art-3 { background: linear-gradient(145deg, #d2b58e, #8a6f56); }
+.place-card .place-art.art-4 { background: linear-gradient(145deg, #b5c7a1, #63836b); }
 .place-card-button .place-title { display: block; }
 .place-card-button .place-title strong { display: block; min-height: 42px; font-size: 17px; line-height: 1.25; letter-spacing: -.02em; }
 .place-card-button .place-window { display: block; margin: 8px 0 18px; color: var(--blue); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
