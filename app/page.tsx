@@ -142,7 +142,10 @@ export default function Home() {
           if (a.score == null && b.score == null) return a.placeId.localeCompare(b.placeId);
           if (a.score == null) return 1;
           if (b.score == null) return -1;
-          return b.score - a.score || a.placeId.localeCompare(b.placeId);
+          return b.score - a.score
+            || b.coverage.observedWeightedRatio - a.coverage.observedWeightedRatio
+            || a.startDate.localeCompare(b.startDate)
+            || a.placeId.localeCompare(b.placeId);
         });
         setHomeItems(ranked.slice(0, 6));
       })
