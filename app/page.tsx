@@ -285,8 +285,8 @@ export default function Home() {
       {!results && <section className="inspiration-section" aria-label="สถานที่แนะนำ">
         <div className="section-heading"><h2>สถานที่แนะนำ</h2></div>
         {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่ตามความชอบของคุณ…</span></div>}
-        {!homeLoading && homeItems.length > 0 && <div className="inspiration-grid">
-          {homeItems.map((item, index) => <HomeRecommendationCard item={item} index={index} key={item.placeId} />)}
+        {!homeLoading && homeItems.length > 0 && <div className="group-cards home-recommendation-grid">
+          {homeItems.map((item, index) => <PlaceCard item={item} index={index} key={`home-${item.placeId}`} />)}
         </div>}
         {!homeLoading && homeItems.length === 0 && <p className="journal-note">กดค้นหาเพื่อดูสถานที่ที่ตรงกับความชอบของคุณ</p>}
       </section>}
@@ -342,8 +342,12 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   );
 }
 
-function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; onSelectPlace: (place: Place) => void }) {
+function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; onSelectPlace?: (place: Place) => void }) {
   const image = index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg";
+  const summary = <>
+    <span className="place-title"><strong>{item.place.name}</strong></span>
+    <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
+  </>;
   return (
     <article className="place-card" data-place-id={item.placeId}>
       <div className="place-art-frame">
@@ -354,23 +358,7 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
           <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><ExperimentOutlined aria-hidden="true" /></span>
         </div>
       </div>
-      <button type="button" className="place-card-button" onClick={() => onSelectPlace(item.place)} aria-label={`ดู ${item.place.name} บนแผนที่`}>
-        <span className="place-title"><strong>{item.place.name}</strong></span>
-        <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
-      </button>
-    </article>
-  );
-}
-
-function HomeRecommendationCard({ item, index }: { item: Item; index: number }) {
-  const image = index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg";
-  return (
-    <article className="inspiration-card home-recommendation-card">
-      <img src={image} alt="" aria-hidden="true" />
-      <div>
-        <h3>{item.place.name}</h3>
-        <small>{shortDateRange(item.startDate, item.endDate)} · {item.place.province}</small>
-      </div>
+      {onSelectPlace ? <button type="button" className="place-card-button" onClick={() => onSelectPlace(item.place)} aria-label={`ดู ${item.place.name} บนแผนที่`}>{summary}</button> : <div className="place-card-button">{summary}</div>}
     </article>
   );
 }
