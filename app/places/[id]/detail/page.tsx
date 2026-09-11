@@ -74,7 +74,7 @@ type Profile = {
   air: { weight: number };
 };
 type Coordinates = { latitude: number; longitude: number };
-type Route = { coordinates: [number, number][]; distanceKm: number };
+type Route = { coordinates: [number, number][]; distanceKm: number; road: boolean };
 
 const defaultProfile: Profile = {
   tripDays: 2,
@@ -270,7 +270,7 @@ function DetailContent({ item, status, scoringProfile, requestedMode, profile }:
         {profile && scoringProfile === "user" && <p className="detail-preference-note">ความชอบที่ใช้: {profile.temperature.minC}–{profile.temperature.maxC}°C · {rainPreferenceLabel(profile.rain.preference)}</p>}
       </section>
 
-      <section className="detail-map-section detail-section" aria-label="แผนที่ตำแหน่งสถานที่">
+      <section className="detail-map-section detail-section" aria-label="แผนที่เส้นทางไปสถานที่">
         <DetailMap place={item.place} />
       </section>
 
@@ -332,8 +332,17 @@ function DetailMap({ place }: { place: Place }) {
       setRoute(null);
       return;
     }
-    const fallback: Route = { coordinates: [[userLocation.longitude, userLocation.latitude], [place.longitude, place.latitude]], distanceKm: haversineKm(userLocation, place) };
+    const fallback: Route = { coordinates: [[userLocation.longitude, userLocation.latitude], [place.longitude, place.latitude]], distanceKm: haversineKm(userLocation, place), road: false };
     setRoute(fallback);
+    const controller = new AbortController();
+    fetch(`https://router.project-osrm.org/route/v1/driving/${userLocation.longitude},${userLocation.latitude};${place.longitude},${place.latitude}?overview=full&geometries=geojson`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("route unavailable")))
+      .then((data: { routes?: { distance: number; geometry?: { coordinates?: [number, number][] } }[] }) => {
+        const first = data.routes?.[0];
+        if (first?.geometry?.coordinates?.length) setRoute({ coordinates: first.geometry.coordinates, distanceKm: first.distance / 1000, road: true });
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
   }, [place, userLocation]);
 
   useEffect(() => {
@@ -392,15 +401,16 @@ function DetailMap({ place }: { place: Place }) {
     if (source) source.setData(data);
     else {
       map.addSource("detail-route", { type: "geojson", data });
-      map.addLayer({ id: "detail-route-line", type: "line", source: "detail-route", paint: { "line-color": "#24657a", "line-width": 4, "line-opacity": 0.78, "line-dasharray": [1.5, 1.2] } });
+      map.addLayer({ id: "detail-route-line", type: "line", source: "detail-route", paint: { "line-color": "#24657a", "line-width": 4, "line-opacity": 0.78, "line-dasharray": route.road ? [1, 0] : [1.5, 1.2] } });
     }
+    if (map.getLayer("detail-route-line")) map.setPaintProperty("detail-route-line", "line-dasharray", route.road ? [1, 0] : [1.5, 1.2]);
   }, [mapReady, route]);
 
   return <div className="detail-map-wrap">
-    <div ref={mapContainerRef} className="detail-map-canvas" aria-label={`แผนที่ตำแหน่ง ${place.name}`} />
+    <div ref={mapContainerRef} className="detail-map-canvas" aria-label={`แผนที่เส้นทางไป ${place.name}`} />
     <div className="detail-map-legend"><span><i className="legend-dot legend-user" /> ตำแหน่งของฉัน</span><span><i className="legend-dot legend-place" /> {place.name}</span></div>
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" />}
-    <div className="detail-route-summary"><div><strong>{route ? `${route.distanceKm.toFixed(1)} กม.` : "-"}</strong><span>ระยะทางโดยประมาณ</span></div><div className="route-status">{locationState === "ready" ? "มีตำแหน่งผู้ใช้" : locationState === "loading" ? "กำลังอ่านตำแหน่ง…" : "ยังไม่มีตำแหน่งผู้ใช้"}<Button type="link" size="small" onClick={requestLocation}>ใช้ตำแหน่งของฉัน</Button></div></div>
+    <div className="detail-route-summary"><div><strong>{route ? `${route.distanceKm.toFixed(1)} กม.` : "-"}</strong><span>{route?.road ? "ระยะทางจากเส้นทาง" : "ระยะทางเส้นตรงโดยประมาณ"}</span></div><div className="route-status">{locationState === "ready" ? "มีตำแหน่งผู้ใช้" : locationState === "loading" ? "กำลังอ่านตำแหน่ง…" : "ยังไม่มีตำแหน่งผู้ใช้"}<Button type="link" size="small" onClick={requestLocation}>ใช้ตำแหน่งของฉัน</Button></div></div>
     <p className="detail-map-note">พิกัดสถานที่เป็นจุดอ้างอิงของอุทยาน/สถานที่ ไม่ใช่ตำแหน่งลานกางเต็นท์ · แผนที่ © OpenFreeMap © OpenStreetMap contributors</p>
   </div>;
 }
