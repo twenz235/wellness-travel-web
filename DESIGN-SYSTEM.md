@@ -29,6 +29,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | First visit | `.landing-page`, `.landing-copy`, `.landing-postcard` | Introduce the product and open the preference form. |
 | App shell | `.topbar`, `.brand-mark`, `.profile-button` | Persistent identity and preference access. |
 | Search | `.hero-section`, `.search-card`, `.search-grid` | Choose a date range or search within the next 30 days. |
+| Inspiration | `.inspiration-section`, `.inspiration-card` | Keep the wireframe’s visual breathing room before a search; these illustrations are explicitly conceptual, not personalized results. |
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
 | Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |
