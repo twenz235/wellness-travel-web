@@ -9,7 +9,7 @@ This is the implementation reference for the new web version. It translates the 
 - **Text:** `#203b38` (`--color-ink` / `--ink`); supporting text uses `#64736f` (`--color-muted` / `--muted`).
 - **Accent:** `#24657a` (`--color-accent` / `--blue`); dark action buttons use the ink color.
 - **Typography:** system Thai sans-serif for UI text; Georgia is reserved for the italic editorial emphasis (`em`).
-- **Icons:** keep Ant Design `SearchOutlined` for the search action. Metric cards use the Myna UI Icons SVGs for [Thermometer](https://www.shadcn.io/icon/mynaui-thermometer), [Cloud Rain](https://www.shadcn.io/icon/mynaui-cloud-rain), and [Mask](https://www.shadcn.io/icon/mynaui-mask) for temperature, rain, and AQI respectively.
+- **Icons:** keep Ant Design `SearchOutlined` for the search action. Metric cards use the source SVG files from Myna UI Icons: [`mynaui-thermometer.svg`](public/icons/mynaui-thermometer.svg), [`mynaui-cloud-rain.svg`](public/icons/mynaui-cloud-rain.svg), and [`mynaui-mask.svg`](public/icons/mynaui-mask.svg) for temperature, rain, and AQI respectively ([Thermometer](https://www.shadcn.io/icon/mynaui-thermometer), [Cloud Rain](https://www.shadcn.io/icon/mynaui-cloud-rain), [Mask](https://www.shadcn.io/icon/mynaui-mask)).
 
 Tokens live in `app/globals.css`. Spacing uses a 4px base (`--space-1` through `--space-7`), controls use `--radius-control`, cards use `--radius-card`, and modal/search panels use `--radius-panel`. Keep focus indicators visible and preserve a minimum 44px interactive target.
 

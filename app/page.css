@@ -73,7 +73,10 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
 .place-card-button .place-window { display: block; margin: 8px 0 0; color: var(--blue); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .metric-list { display: grid; gap: 10px; }
 .metric { display: flex; align-items: center; gap: 10px; min-height: 24px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
-.metric-icon { width: 19px; height: 19px; flex: 0 0 19px; color: var(--blue); }
+.metric-icon { width: 19px; height: 19px; flex: 0 0 19px; display: block; background-color: currentColor; color: var(--blue); -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; }
+.metric-icon-temperature { -webkit-mask-image: url("/icons/mynaui-thermometer.svg"); mask-image: url("/icons/mynaui-thermometer.svg"); }
+.metric-icon-rain { -webkit-mask-image: url("/icons/mynaui-cloud-rain.svg"); mask-image: url("/icons/mynaui-cloud-rain.svg"); }
+.metric-icon-air { -webkit-mask-image: url("/icons/mynaui-mask.svg"); mask-image: url("/icons/mynaui-mask.svg"); }
 .metric strong { min-width: 72px; color: var(--ink); font-size: 15px; font-weight: 650; }
 .metric-temperature .metric-icon { color: #d17b51; }
 .metric-rain .metric-icon { color: #4c8991; }
