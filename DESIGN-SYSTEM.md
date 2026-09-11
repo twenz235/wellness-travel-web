@@ -29,7 +29,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | First visit | `.landing-page`, `.landing-copy`, `.landing-postcard` | Introduce the product and open the preference form. |
 | App shell | `.topbar`, `.brand-mark`, `.profile-button` | Persistent identity and preference access. |
 | Search | `.hero-section`, `.search-card`, `.search-grid` | Choose a date range or search within the next 30 days. |
-| Inspiration | `.inspiration-section`, `.inspiration-card` | Show the six highest-scoring daytime recommendations returned for the saved profile; keep the wireframe’s visual card rhythm while making the data source explicit. |
+| Inspiration | `.inspiration-section`, `.inspiration-card` | Show the six highest-scoring recommendations returned for the saved profile; keep the wireframe’s visual card rhythm while making the data source explicit. |
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
 | Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |

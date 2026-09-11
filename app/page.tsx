@@ -283,7 +283,7 @@ export default function Home() {
       </section>
 
       {!results && <section className="inspiration-section" aria-label="สถานที่แนะนำ">
-        <div className="section-heading"><h2>สถานที่แนะนำ</h2><small>{homeLoading ? "กำลังจัดอันดับ…" : "6 อันดับแรก · คะแนนกลางวัน"}</small></div>
+        <div className="section-heading"><h2>สถานที่แนะนำ</h2></div>
         {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่ตามความชอบของคุณ…</span></div>}
         {!homeLoading && homeItems.length > 0 && <div className="inspiration-grid">
           {homeItems.map((item, index) => <HomeRecommendationCard item={item} index={index} key={item.placeId} />)}
@@ -368,7 +368,7 @@ function HomeRecommendationCard({ item, index }: { item: Item; index: number }) 
     <article className="inspiration-card home-recommendation-card">
       <img src={image} alt="" aria-hidden="true" />
       <div>
-        <small>อันดับ {index + 1} · คะแนนกลางวัน {item.score == null ? "—" : item.score.toFixed(1)}</small>
+        <small>อันดับ {index + 1} · คะแนน {item.score == null ? "—" : item.score.toFixed(1)}</small>
         <h3>{item.place.name}</h3>
         <small>{shortDateRange(item.startDate, item.endDate)} · {item.place.province}</small>
       </div>
