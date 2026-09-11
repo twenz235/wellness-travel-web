@@ -338,7 +338,7 @@ function PlaceCard({ item, status, mode, detail, detailLoading, onDetail }: { it
           <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><ExperimentOutlined aria-hidden="true" /></span>
         </span>
       </button>
-      {detail && <div className="place-detail"><DetailSummary detail={detail} mode={mode} /></div>}
+      {detail && <div className="place-detail"><DetailSummary item={item} status={status} detail={detail} mode={mode} /></div>}
     </article>
   );
 }
@@ -355,14 +355,18 @@ function MapPanel({ places }: { places: Place[] }) {
   </div>;
 }
 
-function DetailSummary({ detail, mode }: { detail: Item["details"]; mode: string }) {
+function DetailSummary({ item, status, detail, mode }: { item: Item; status: string; detail: Item["details"]; mode: string }) {
   if (!detail) return null;
   return <div className="detail-summary">
+    <strong>สถานะ: {statusNames[status] ?? status}</strong>
+    <span>coverage {Math.round(item.coverage.observedWeightedRatio * 100)}%</span>
     {mode === "forecast" && <><strong>รายละเอียด Forecast</strong><span>{detail.daily?.length ?? 0} วัน · {detail.hourly?.length ?? 0} ชั่วโมง</span></>}
     {mode === "seasonal" && <><strong>ปีที่ใช้คำนวณ Seasonal</strong><span>{detail.seasonalYears?.length ?? 0} ปี</span></>}
     {detail.yearOutlook && <span>SEAS5: {detail.yearOutlook.baselineDescription} ({detail.yearOutlook.anomalyK > 0 ? "+" : ""}{detail.yearOutlook.anomalyK.toFixed(1)}K)</span>}
     {mode === "forecast" && detail.daily && <div className="detail-days">{detail.daily.map((day) => <div className="detail-day" key={day.date}><b>{dateLabel(day.date)}</b><span>{day.temperatureMeanC == null ? "อุณหภูมิ —" : `อุณหภูมิ ${day.temperatureMeanC.toFixed(1)}°C`}</span><span>{day.rainMeanMm == null ? "ฝน —" : `ฝน ${day.rainMeanMm.toFixed(2)} mm/h`}</span><span>{day.usAqiPm25 == null ? "AQI —" : `AQI ${day.usAqiPm25}`}</span></div>)}</div>}
     {mode === "forecast" && detail.hourly && <details className="detail-hourly"><summary>ดูข้อมูลรายชั่วโมง ({detail.hourly.length})</summary><div className="hourly-list">{detail.hourly.map((hour) => <span key={hour.at}>{new Date(hour.at).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })} · {hour.temperatureC == null ? "อุณหภูมิ —" : `${hour.temperatureC.toFixed(1)}°C`} · {hour.rainMm == null ? "ฝน —" : `${hour.rainMm.toFixed(2)} mm`}</span>)}</div></details>}
-    <small>แหล่งข้อมูล: {detail.sources?.map((source) => source.provider).join(", ") || "—"}</small>
+    {item.reasons.length > 0 && <p className="detail-reasons">เหตุผล: {item.reasons.map((reason) => reason.message ?? reason.code).join(" ")}</p>}
+    <small>แหล่งข้อมูล: {detail.sources?.map((source) => source.provider).join(", ") || "—"} · dataset: {item.sourceIds.join(", ") || "—"}</small>
+    <a href={item.place.sourceUrl} target="_blank" rel="noreferrer">แหล่งข้อมูลสถานที่ DNP ↗</a>
   </div>;
 }
