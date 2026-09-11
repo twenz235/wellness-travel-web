@@ -73,15 +73,15 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
 .place-card-button .place-window { display: block; margin: 8px 0 0; color: var(--blue); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .metric-list { display: grid; gap: 10px; }
 .metric { display: flex; align-items: center; gap: 10px; min-height: 24px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
-.metric .anticon { width: 19px; color: var(--blue); font-size: 17px; }
+.metric-icon { width: 19px; height: 19px; flex: 0 0 19px; color: var(--blue); }
 .metric strong { min-width: 72px; color: var(--ink); font-size: 15px; font-weight: 650; }
-.metric-temperature .anticon { color: #d17b51; }
-.metric-rain .anticon { color: #4c8991; }
-.metric-air .anticon { color: #819b62; }
+.metric-temperature .metric-icon { color: #d17b51; }
+.metric-rain .metric-icon { color: #4c8991; }
+.metric-air .metric-icon { color: #819b62; }
 .place-overlay { position: absolute; z-index: 1; top: 12px; right: 12px; min-width: 124px; gap: 7px; padding: 10px 11px; border: 1px solid rgb(255 255 255 / 70%); border-radius: 14px; background: rgb(255 255 255 / 86%); box-shadow: 0 8px 22px rgb(32 59 56 / 14%); backdrop-filter: blur(5px); }
 .place-overlay .metric { justify-content: space-between; gap: 8px; min-height: 20px; font-size: 11px; }
 .place-overlay .metric strong { min-width: 72px; font-size: 12px; }
-.place-overlay .metric .anticon { width: 17px; font-size: 15px; }
+.place-overlay .metric-icon { width: 17px; height: 17px; flex-basis: 17px; }
 .inspiration-section { padding: 62px clamp(20px, 5vw, 70px) 0; }
 .journal-note { margin: 22px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .home-recommendation-loading { min-height: 150px; display: flex; justify-content: center; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { Alert, Button, DatePicker, Form, InputNumber, Pagination, Select, Spin, Tag } from "antd";
-import { ArrowRightOutlined, CloudDownloadOutlined, EnvironmentOutlined, FireOutlined, HeatMapOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, EnvironmentOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
+import { MynauiCloudRain, MynauiMask, MynauiThermometer } from "./mynaui-icons";
 import "./page.css";
 
 const { RangePicker } = DatePicker;
@@ -352,9 +353,9 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
       <div className="place-art-frame">
         <img className="place-art" src={image} alt="" aria-hidden="true" />
         <div className="metric-list place-overlay" aria-label="สรุปสภาพอากาศ">
-          <span className="metric metric-temperature" title="อุณหภูมิเฉลี่ย"><strong>{item.metrics?.temperatureC == null ? "—" : `${item.metrics.temperatureC.toFixed(1)}°`}</strong><FireOutlined aria-hidden="true" /></span>
-          <span className="metric metric-rain" title="ฝนเฉลี่ยต่อชั่วโมง"><strong>{item.metrics?.rainMmPerHour == null ? "—" : `${item.metrics.rainMmPerHour.toFixed(2)} mm`}</strong><CloudDownloadOutlined aria-hidden="true" /></span>
-          <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><HeatMapOutlined aria-hidden="true" /></span>
+          <span className="metric metric-temperature" title="อุณหภูมิเฉลี่ย"><strong>{item.metrics?.temperatureC == null ? "—" : `${item.metrics.temperatureC.toFixed(1)}°`}</strong><MynauiThermometer className="metric-icon" aria-hidden="true" /></span>
+          <span className="metric metric-rain" title="ฝนเฉลี่ยต่อชั่วโมง"><strong>{item.metrics?.rainMmPerHour == null ? "—" : `${item.metrics.rainMmPerHour.toFixed(2)} mm`}</strong><MynauiCloudRain className="metric-icon" aria-hidden="true" /></span>
+          <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><MynauiMask className="metric-icon" aria-hidden="true" /></span>
         </div>
       </div>
       {onSelectPlace ? <button type="button" className="place-card-button" onClick={() => onSelectPlace(item.place)} aria-label={`ดู ${item.place.name} บนแผนที่`}>{summary}</button> : <div className="place-card-button">{summary}</div>}
