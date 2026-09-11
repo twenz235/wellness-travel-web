@@ -88,8 +88,7 @@ export default function Home() {
   const [results, setResults] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detailLoading, setDetailLoading] = useState<string | null>(null);
-  const [details, setDetails] = useState<Record<string, Item["details"]>>({});
+  const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
   const [capability, setCapability] = useState<{ minStartDate: string; maxEndDate: string } | null>(null);
   const [catalogPlaces, setCatalogPlaces] = useState<Place[]>([]);
 
@@ -136,7 +135,7 @@ export default function Home() {
     }
     setLoading(true);
     setError(null);
-    setDetails({});
+    setFocusedPlaceId(null);
     try {
       const response = await fetch(`${API_BASE}/v1/recommendations`, {
         method: "POST",
@@ -156,36 +155,6 @@ export default function Home() {
       setError(err instanceof Error ? err.message : "ค้นหาไม่สำเร็จ");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function loadDetail(item: Item, mode: string) {
-    if (details[item.placeId]) return;
-    setDetailLoading(item.placeId);
-    try {
-      const response = await fetch(`${API_BASE}/v1/recommendations/detail`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dates: results?.search.kind === "vacation" ? { startDate: item.startDate, endDate: item.endDate } : null,
-          tripDays: results?.search.tripDays ?? tripDays,
-          period,
-          preferences: profile,
-          requirements: { placeType: "national_park" },
-          placeId: item.placeId,
-          selectedStartDate: mode === "forecast" ? item.startDate : "",
-          selectedEndDate: mode === "forecast" ? item.endDate : "",
-          mode,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error?.code ?? "รายละเอียดไม่พร้อม");
-      const found = payload.groups?.flatMap((group: ApiResponse["groups"][number]) => group.items).find((candidate: Item) => candidate.placeId === item.placeId);
-      if (found?.details) setDetails((current) => ({ ...current, [item.placeId]: found.details }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "อ่านรายละเอียดไม่สำเร็จ");
-    } finally {
-      setDetailLoading(null);
     }
   }
 
@@ -213,7 +182,7 @@ export default function Home() {
         <div className="landing-copy">
           <p className="eyebrow">WELLNESS TRAVEL</p>
           <h1>ออกไปพักใจ<br /><em>ในวันที่ใช่สำหรับคุณ</em></h1>
-          <p>ค้นพบธรรมชาติที่เข้ากับความชอบ โดยดูอุณหภูมิ ฝน และฝุ่นจากข้อมูลที่มีที่มา</p>
+        <p>ค้นพบธรรมชาติในแบบของคุณ<br />ให้อากาศที่ดีเป็นส่วนหนึ่งของวันพักผ่อน</p>
         </div>
         <div className="landing-postcard">
           <img src="/assets/mountains.svg" alt="ภาพวาดภูเขาสำหรับการพักผ่อน" />
@@ -222,7 +191,6 @@ export default function Home() {
         <Button type="primary" size="large" className="landing-button" onClick={() => setShowProfile(true)}>
           เริ่มต้นการเดินทาง <ArrowRightOutlined />
         </Button>
-        <p className="landing-note">ใช้เวลาไม่ถึง 1 นาที · แก้ไขได้ทุกเมื่อ</p>
         {showProfile && <ProfilePanel draft={profileDraft} setDraft={setProfileDraft} onSave={saveProfile} onCancel={cancelProfile} />}
       </main>
     );
@@ -255,6 +223,7 @@ export default function Home() {
               value={range}
               onChange={(value) => setRange(value as [Dayjs, Dayjs] | null)}
               allowClear
+              size="large"
               format="DD/MM/YYYY"
               placeholder={["วันไป", "วันกลับ"]}
               disabledDate={(current) => current.isBefore(dateBounds.min, "day") || current.isAfter(dateBounds.max, "day")}
@@ -263,12 +232,8 @@ export default function Home() {
             {!range && <small className="field-help">ไม่เลือกวัน: ค้นหาช่วงดีที่สุดภายใน 30 วัน · เริ่มต้น {tripDays} วัน</small>}
           </div>
           <div className="field">
-            <label>ความยาวทริป</label>
-            <Select value={tripDays} onChange={setTripDays} options={Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: `${i + 1} วัน` }))} style={{ width: "100%" }} />
-          </div>
-          <div className="field">
             <label>ช่วงเวลาที่ชอบ</label>
-            <Select value={period} onChange={setPeriod} options={[{ value: "all", label: "ทั้งวัน" }, { value: "day", label: "กลางวัน" }, { value: "night", label: "กลางคืน" }]} style={{ width: "100%" }} />
+            <Select size="large" value={period} onChange={setPeriod} options={[{ value: "all", label: "ทั้งวัน" }, { value: "day", label: "กลางวัน" }, { value: "night", label: "กลางคืน" }]} style={{ width: "100%" }} />
           </div>
         </div>
         <div className="search-footer">
@@ -293,14 +258,14 @@ export default function Home() {
       {results && !loading && (
         <section className="results-section" aria-live="polite">
           <div className="results-heading">
-            <div><p className="eyebrow">02 / ผลลัพธ์จากข้อมูลจริง</p><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2><p>{dateLabel(results.search.startDate)} – {dateLabel(results.search.endDate)} · {results.search.tripDays} วัน</p></div>
+            <div><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2><p>{dateLabel(results.search.startDate)} – {dateLabel(results.search.endDate)} · {results.search.tripDays} วัน</p></div>
             <Tag color={activeGroup?.mode === "forecast" ? "blue" : "green"}>{activeGroup?.mode === "forecast" ? "Forecast" : "Seasonal"}</Tag>
           </div>
           <div className="results-layout">
             <div className="cards-grid">
-              {resultGroups.map((group) => <ResultGroup group={group} details={details} detailLoading={detailLoading} onDetail={(item, mode) => loadDetail(item, mode)} key={`${group.mode}-${group.status}`} />)}
+              {resultGroups.map((group) => <ResultGroup group={group} onSelectPlace={(place) => setFocusedPlaceId(place.id)} key={`${group.mode}-${group.status}`} />)}
             </div>
-            <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} />
+            <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} focusPlaceId={focusedPlaceId} />
           </div>
         </section>
       )}
@@ -320,13 +285,13 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
         <p className="panel-intro">บอกสภาพที่ทำให้คุณพักได้เต็มที่ ระบบจะใช้ค่านี้จัดอันดับทุกครั้ง</p>
         <Form layout="vertical">
           <Form.Item label="อุณหภูมิที่สบาย (°C)">
-            <div className="inline-fields"><InputNumber min={-10} max={50} value={draft.temperature.minC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, minC: Number(v ?? 0) } })} /><span>ถึง</span><InputNumber min={-10} max={50} value={draft.temperature.maxC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, maxC: Number(v ?? 0) } })} /></div>
+            <div className="inline-fields"><InputNumber size="large" min={-10} max={50} value={draft.temperature.minC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, minC: Number(v ?? 0) } })} /><span>ถึง</span><InputNumber size="large" min={-10} max={50} value={draft.temperature.maxC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, maxC: Number(v ?? 0) } })} /></div>
           </Form.Item>
           <Form.Item label="ฝนที่ยอมรับได้">
-            <Select value={draft.rain.preference} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, preference: v } })} options={[{ value: "dry", label: "ไม่ชอบฝน" }, { value: "light", label: "ฝนเบาได้" }, { value: "moderate", label: "ฝนปานกลางได้" }]} />
+            <Select size="large" value={draft.rain.preference} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, preference: v } })} options={[{ value: "dry", label: "ไม่ชอบฝน" }, { value: "light", label: "ฝนเบาได้" }, { value: "moderate", label: "ฝนปานกลางได้" }]} />
           </Form.Item>
           <Form.Item label="น้ำหนักความสำคัญ">
-            <div className="weight-row"><label>อุณหภูมิ <Select value={draft.temperature.weight} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝน <Select value={draft.rain.weight} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝุ่น <Select value={draft.air.weight} onChange={(v) => setDraft({ ...draft, air: { weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label></div>
+            <div className="weight-row"><label>อุณหภูมิ <Select size="large" value={draft.temperature.weight} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝน <Select size="large" value={draft.rain.weight} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝุ่น <Select size="large" value={draft.air.weight} onChange={(v) => setDraft({ ...draft, air: { weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label></div>
           </Form.Item>
         </Form>
         <div className="panel-actions"><Button onClick={onCancel}>ยกเลิก</Button><Button type="primary" onClick={onSave}>ใช้ความชอบนี้</Button></div>
@@ -335,25 +300,27 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   );
 }
 
-function PlaceCard({ item, index, status, mode, detail, detailLoading, onDetail }: { item: Item; index: number; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
+function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; onSelectPlace: (place: Place) => void }) {
+  const image = index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg";
   return (
-    <article className="place-card" data-place-id={item.placeId} data-status={status}>
-      <img className="place-art" src={index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg"} alt="" aria-hidden="true" />
-      <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading}>
-        <span className="place-title"><strong>{item.place.name}</strong></span>
-        <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
-        <span className="metric-list">
+    <article className="place-card" data-place-id={item.placeId}>
+      <div className="place-art-frame">
+        <img className="place-art" src={image} alt="" aria-hidden="true" />
+        <div className="metric-list place-overlay" aria-label="สรุปสภาพอากาศ">
           <span className="metric metric-temperature" title="อุณหภูมิเฉลี่ย"><strong>{item.metrics?.temperatureC == null ? "—" : `${item.metrics.temperatureC.toFixed(1)}°`}</strong><DashboardOutlined aria-hidden="true" /></span>
           <span className="metric metric-rain" title="ฝนเฉลี่ยต่อชั่วโมง"><strong>{item.metrics?.rainMmPerHour == null ? "—" : `${item.metrics.rainMmPerHour.toFixed(2)} mm`}</strong><CloudOutlined aria-hidden="true" /></span>
           <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><ExperimentOutlined aria-hidden="true" /></span>
-        </span>
+        </div>
+      </div>
+      <button type="button" className="place-card-button" onClick={() => onSelectPlace(item.place)} aria-label={`ดู ${item.place.name} บนแผนที่`}>
+        <span className="place-title"><strong>{item.place.name}</strong></span>
+        <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
       </button>
-      {detail && <div className="place-detail"><DetailSummary item={item} status={status} detail={detail} mode={mode} /></div>}
     </article>
   );
 }
 
-function ResultGroup({ group, details, detailLoading, onDetail }: { group: { mode: string; status: string; items: Item[] }; details: Record<string, Item["details"]>; detailLoading: string | null; onDetail: (item: Item, mode: string) => void }) {
+function ResultGroup({ group, onSelectPlace }: { group: { mode: string; status: string; items: Item[] }; onSelectPlace: (place: Place) => void }) {
   const [visibleCount, setVisibleCount] = useState(9);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -367,24 +334,37 @@ function ResultGroup({ group, details, detailLoading, onDetail }: { group: { mod
   const visibleItems = group.items.slice(0, visibleCount);
   return <div className="result-group">
     <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
-    <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => onDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}</div>
+    <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onSelectPlace={onSelectPlace} key={`${group.status}-${item.placeId}`} />)}</div>
     {visibleCount < group.items.length && <div ref={sentinelRef} className="lazy-sentinel" aria-label="กำลังเตรียมสถานที่เพิ่มเติม">เลื่อนลงเพื่อดูสถานที่เพิ่มเติม</div>}
   </div>;
 }
 
-function MapPanel({ places }: { places: Place[] }) {
+function MapPanel({ places, focusPlaceId }: { places: Place[]; focusPlaceId: string | null }) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const [mapError, setMapError] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   const uniquePlaces = Array.from(new Map(places.map((place) => [place.id, place])).values());
   const placeKey = uniquePlaces.map((place) => `${place.id}:${place.latitude}:${place.longitude}`).join("|");
   useEffect(() => {
     let disposed = false;
     setMapError(false);
+    setMapReady(false);
     import("maplibre-gl").then(({ Map, Marker, NavigationControl, Popup }) => {
       if (disposed || !mapContainerRef.current) return;
+      const isMobile = window.matchMedia("(max-width: 639px)").matches;
       const map = new Map({ container: mapContainerRef.current, style: "https://tiles.openfreemap.org/styles/liberty", center: [100.5, 13.7], zoom: 5 });
-      map.addControl(new NavigationControl(), "top-right");
+      if (!isMobile) {
+        map.addControl(new NavigationControl(), "top-right");
+      } else {
+        map.dragPan.disable();
+        map.scrollZoom.disable();
+        map.boxZoom.disable();
+        map.doubleClickZoom.disable();
+        map.touchZoomRotate.disable();
+        map.dragRotate.disable();
+        map.keyboard.disable();
+      }
       map.on("error", () => setMapError(true));
       uniquePlaces.forEach((place) => {
         const marker = document.createElement("button");
@@ -395,37 +375,31 @@ function MapPanel({ places }: { places: Place[] }) {
         new Marker({ element: marker, anchor: "bottom" }).setLngLat([place.longitude, place.latitude]).setPopup(new Popup({ offset: 18 }).setText(place.name)).addTo(map);
       });
       mapRef.current = map;
-      map.once("load", () => map.resize());
+      map.once("load", () => {
+        map.resize();
+        setMapReady(true);
+      });
     }).catch(() => setMapError(true));
     return () => {
       disposed = true;
       mapRef.current?.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
   }, [placeKey]);
-  return <div className="map-panel">
-    <div className="map-heading"><div><p className="eyebrow">03 / ภาพรวมพื้นที่</p><h3>24 จุดหมายธรรมชาติ</h3></div><EnvironmentOutlined /></div>
-    <div ref={mapContainerRef} className="map-canvas" aria-label="แผนที่ MapLibre จุดหมายประเทศไทย" />
+  useEffect(() => {
+    const place = uniquePlaces.find((candidate) => candidate.id === focusPlaceId);
+    const map = mapRef.current;
+    if (!place || !map || !mapReady) return;
+    mapContainerRef.current?.setAttribute("data-map-center", `${place.latitude},${place.longitude}`);
+    map.flyTo({ center: [place.longitude, place.latitude], zoom: map.getZoom(), essential: true });
+  }, [focusPlaceId, mapReady, placeKey]);
+  return <div className="map-panel" data-focused-place-id={focusPlaceId ?? undefined}>
+    <div className="map-heading"><div><h3>24 จุดหมายธรรมชาติ</h3></div><EnvironmentOutlined /></div>
+    <div ref={mapContainerRef} className="map-canvas" aria-label="แผนที่จุดหมายประเทศไทย" />
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" description="รายการสถานที่ยังใช้งานได้ ตรวจพิกัดได้จากรายการด้านล่าง" />}
-    <p className="map-credit">MapLibre GL JS · แผนที่ OpenFreeMap © OpenMapTiles © OpenStreetMap · หมุดคือพิกัดอ้างอิงจาก DNP</p>
     <div className="map-place-list" aria-label="รายการจุดอ้างอิงจาก catalog">
       {uniquePlaces.map((place) => <div className="map-place" data-place-id={place.id} key={place.id}><span>{place.name}</span><small>{place.latitude.toFixed(4)}, {place.longitude.toFixed(4)}</small></div>)}
     </div>
-  </div>;
-}
-
-function DetailSummary({ item, status, detail, mode }: { item: Item; status: string; detail: Item["details"]; mode: string }) {
-  if (!detail) return null;
-  return <div className="detail-summary">
-    <strong>สถานะ: {statusNames[status] ?? status}</strong>
-    <span>coverage {Math.round(item.coverage.observedWeightedRatio * 100)}%</span>
-    {mode === "forecast" && <><strong>รายละเอียด Forecast</strong><span>{detail.daily?.length ?? 0} วัน · {detail.hourly?.length ?? 0} ชั่วโมง</span></>}
-    {mode === "seasonal" && <><strong>ปีที่ใช้คำนวณ Seasonal</strong><span>{detail.seasonalYears?.length ?? 0} ปี</span></>}
-    {detail.yearOutlook && <span>SEAS5: {detail.yearOutlook.baselineDescription} ({detail.yearOutlook.anomalyK > 0 ? "+" : ""}{detail.yearOutlook.anomalyK.toFixed(1)}K)</span>}
-    {mode === "forecast" && detail.daily && <div className="detail-days">{detail.daily.map((day) => <div className="detail-day" key={day.date}><b>{dateLabel(day.date)}</b><span>{day.temperatureMeanC == null ? "อุณหภูมิ —" : `อุณหภูมิ ${day.temperatureMeanC.toFixed(1)}°C`}</span><span>{day.rainMeanMm == null ? "ฝน —" : `ฝน ${day.rainMeanMm.toFixed(2)} mm/h`}</span><span>{day.usAqiPm25 == null ? "AQI —" : `AQI ${day.usAqiPm25}`}</span></div>)}</div>}
-    {mode === "forecast" && detail.hourly && <details className="detail-hourly"><summary>ดูข้อมูลรายชั่วโมง ({detail.hourly.length})</summary><div className="hourly-list">{detail.hourly.map((hour) => <span key={hour.at}>{new Date(hour.at).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" })} · {hour.temperatureC == null ? "อุณหภูมิ —" : `${hour.temperatureC.toFixed(1)}°C`} · {hour.rainMm == null ? "ฝน —" : `${hour.rainMm.toFixed(2)} mm`}</span>)}</div></details>}
-    {item.reasons.length > 0 && <p className="detail-reasons">เหตุผล: {item.reasons.map((reason) => reason.message ?? reason.code).join(" ")}</p>}
-    <small>แหล่งข้อมูล: {detail.sources?.map((source) => source.provider).join(", ") || "—"} · dataset: {item.sourceIds.join(", ") || "—"}</small>
-    <a href={item.place.sourceUrl} target="_blank" rel="noreferrer">แหล่งข้อมูลสถานที่ DNP ↗</a>
   </div>;
 }

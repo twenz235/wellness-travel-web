@@ -20,7 +20,7 @@ The SVG illustrations from `exam-plan/ux/assets/` are copied into `public/assets
 - `forest.svg`: inspiration card and alternating recommendation card art.
 - `lake.svg`: inspiration card and alternating recommendation card art.
 
-These are supplied demo illustrations, so the UI does not imply that they are photographs of a specific park. Real place provenance remains in the detail view and source links.
+These are supplied demo illustrations, so the UI does not imply that they are photographs of a specific park. The card keeps the summary compact; place names focus the corresponding map marker and do not expand an inline detail panel.
 
 ## Component map
 
@@ -31,7 +31,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | Search | `.hero-section`, `.search-card`, `.search-grid` | Choose a date range or search within the next 30 days. |
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
-| Details | `.place-detail`, `.detail-days`, `.hourly-list` | Daily/hourly explanation and provenance on demand. |
+| Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |
 | Preferences | `.panel-backdrop`, `.profile-panel` | Edit saved user preferences; cancel restores the last saved value. |
 
 ## Responsive rules
@@ -47,5 +47,5 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 2. The date range is optional. With no dates, the API searches the next 30 days using the saved trip length. A selected trip may be 1–30 days.
 3. `national_park` is the only hard requirement. Temperature, rain, and AQI affect scores and explanations.
 4. Result status is explicit: `ผ่านเงื่อนไขและข้อมูลครบ`, `ข้อมูลยังไม่ครบ`, or `ไม่ตรงเงื่อนไข`.
-5. Loading, API error, no-result, and incomplete-data states retain the same spacing and focus behavior as the normal state.
-
+5. Selecting a place name calls `flyTo` with the current zoom. On mobile the map is read-only (no pan, zoom, rotate, touch, or keyboard map interactions); tablet and desktop keep map controls enabled.
+6. Loading, API error, no-result, and incomplete-data states retain the same spacing and focus behavior as the normal state.
