@@ -29,7 +29,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | First visit | `.landing-page`, `.landing-copy`, `.landing-postcard` | Introduce the product and open the preference form. |
 | App shell | `.topbar`, `.brand-mark`, `.profile-button` | Persistent identity and preference access. |
 | Search | `.hero-section`, `.search-card`, `.search-grid` | Choose a date range or search within the next 30 days. |
-| Inspiration | `.inspiration-section`, `.inspiration-card` | Keep the wireframe’s visual breathing room before a search; these illustrations are explicitly conceptual, not personalized results. |
+| Inspiration | `.inspiration-section`, `.inspiration-card` | Show the six highest-scoring daytime recommendations returned for the saved profile; keep the wireframe’s visual card rhythm while making the data source explicit. |
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
 | Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |
@@ -38,8 +38,8 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 ## Responsive rules
 
 - **Mobile (320–639px):** one card per row, one-column search form, full-width actions, and the map after all cards. The 320px layout is the minimum supported width.
-- **Tablet (640–1200px):** two cards per row; the map moves below the card list so the result flow remains readable.
-- **Desktop (>1200px):** three cards per row; the map sits beside the result list and remains sticky while browsing.
+- **Tablet (640–1023px):** two cards per row; the map moves below the card list so the result flow remains readable.
+- **Laptop and desktop (≥1024px):** three cards per row for the home recommendations and results; the map sits beside the result list above 1200px and moves below it at smaller widths.
 - Results render three rows initially and append more cards through the lazy-load sentinel. The map always represents all available places, including cards not yet rendered.
 
 ## Interaction and state rules
@@ -50,3 +50,4 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 4. Result status is explicit: `ผ่านเงื่อนไขและข้อมูลครบ`, `ข้อมูลยังไม่ครบ`, or `ไม่ตรงเงื่อนไข`.
 5. Selecting a place name calls `flyTo` with the current zoom. On mobile the map is read-only (no pan, zoom, rotate, touch, or keyboard map interactions); tablet and desktop keep map controls enabled.
 6. Loading, API error, no-result, and incomplete-data states retain the same spacing and focus behavior as the normal state.
+7. After a profile is saved, the home page requests the flexible 30-day recommendation with `period: "day"`, sorts national parks by score, and shows the first six places. The card date range is the API-selected best window; the home list is a recommendation preview, not a replacement for the full result groups.

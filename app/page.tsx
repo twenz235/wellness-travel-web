@@ -84,6 +84,8 @@ export default function Home() {
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
   const [capability, setCapability] = useState<{ minStartDate: string; maxEndDate: string } | null>(null);
   const [catalogPlaces, setCatalogPlaces] = useState<Place[]>([]);
+  const [homeItems, setHomeItems] = useState<Item[]>([]);
+  const [homeLoading, setHomeLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -114,6 +116,46 @@ export default function Home() {
       .then((data) => setCatalogPlaces(data.places ?? []))
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!profile) {
+      setHomeItems([]);
+      return;
+    }
+    let cancelled = false;
+    setHomeLoading(true);
+    fetch(`${API_BASE}/v1/recommendations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dates: null,
+        tripDays: profile.tripDays,
+        period: "day",
+        preferences: { temperature: profile.temperature, rain: profile.rain, air: profile.air },
+        requirements: { placeType: "national_park" },
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("home recommendations unavailable"))))
+      .then((data: ApiResponse) => {
+        if (cancelled) return;
+        const ranked = (data.groups ?? []).flatMap((group) => group.items ?? []).filter((item) => item.place?.placeType === "national_park").sort((a, b) => {
+          if (a.score == null && b.score == null) return a.placeId.localeCompare(b.placeId);
+          if (a.score == null) return 1;
+          if (b.score == null) return -1;
+          return b.score - a.score || a.placeId.localeCompare(b.placeId);
+        });
+        setHomeItems(ranked.slice(0, 6));
+      })
+      .catch(() => {
+        if (!cancelled) setHomeItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setHomeLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   const dateBounds = useMemo(() => {
     const min = capability?.minStartDate ? dayjs(capability.minStartDate) : dayjs().add(1, "day");
@@ -216,7 +258,6 @@ export default function Home() {
       </section>
 
       <section className="search-card" aria-label="ค้นหาสถานที่">
-        <div className="section-kicker"><span>01</span><h2>กำหนดทริป</h2></div>
         <div className="search-grid">
           <div className="field field-wide">
             <RangePicker
@@ -230,7 +271,6 @@ export default function Home() {
               disabledDate={(current) => current.isBefore(dateBounds.min, "day") || current.isAfter(dateBounds.max, "day")}
               style={{ width: "100%" }}
             />
-            {!range && <small className="field-help">ไม่เลือกวัน: ค้นหาช่วงดีที่สุดภายใน 30 วัน · เริ่มต้น {profile?.tripDays ?? defaultProfile.tripDays} วัน</small>}
           </div>
         </div>
         <div className="search-footer">
@@ -239,14 +279,13 @@ export default function Home() {
         </div>
       </section>
 
-      {!results && <section className="inspiration-section" aria-label="แนวทางการพักผ่อน">
-        <div className="section-heading"><h2>สถานที่แนะนำ</h2><small>ภาพประกอบแนวคิด<br />ยังไม่ใช่ผลตามความชอบ</small></div>
-        <div className="inspiration-grid">
-          <article className="inspiration-card"><img src="/assets/mountains.svg" alt="ภาพวาดภูเขา" /><div><small>01 / MOUNTAIN AIR</small><h3>เช้าท่ามกลางภูเขา</h3><small>ค่อย ๆ ใช้เวลา กับวิวตรงหน้า</small></div></article>
-          <article className="inspiration-card"><img src="/assets/forest.svg" alt="ภาพวาดป่า" /><div><small>02 / FOREST SLOWDOWN</small><h3>พักในอ้อมกอดป่า</h3><small>วันธรรมดาที่มีธรรมชาติโอบไว้</small></div></article>
-          <article className="inspiration-card"><img src="/assets/lake.svg" alt="ภาพวาดทิวเขาริมน้ำ" /><div><small>03 / QUIET MOMENTS</small><h3>ปล่อยใจให้ช้าลง</h3><small>เว้นที่ว่างให้วันพักผ่อน</small></div></article>
-        </div>
-        <p className="journal-note">จากวันที่คุณว่าง สู่สถานที่ที่เข้ากับคุณ — พร้อมเหตุผลเรื่องอากาศ ฝน และฝุ่น</p>
+      {!results && <section className="inspiration-section" aria-label="สถานที่แนะนำ">
+        <div className="section-heading"><h2>สถานที่แนะนำ</h2><small>{homeLoading ? "กำลังจัดอันดับ…" : "6 อันดับแรก · คะแนนกลางวัน"}</small></div>
+        {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่ตามความชอบของคุณ…</span></div>}
+        {!homeLoading && homeItems.length > 0 && <div className="inspiration-grid">
+          {homeItems.map((item, index) => <HomeRecommendationCard item={item} index={index} key={item.placeId} />)}
+        </div>}
+        {!homeLoading && homeItems.length === 0 && <p className="journal-note">กดค้นหาเพื่อดูสถานที่ที่ตรงกับความชอบของคุณ</p>}
       </section>}
 
       {error && <Alert className="page-alert" type="warning" showIcon title={error} />}
@@ -316,6 +355,20 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
         <span className="place-title"><strong>{item.place.name}</strong></span>
         <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
       </button>
+    </article>
+  );
+}
+
+function HomeRecommendationCard({ item, index }: { item: Item; index: number }) {
+  const image = index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg";
+  return (
+    <article className="inspiration-card home-recommendation-card">
+      <img src={image} alt="" aria-hidden="true" />
+      <div>
+        <small>อันดับ {index + 1} · คะแนนกลางวัน {item.score == null ? "—" : item.score.toFixed(1)}</small>
+        <h3>{item.place.name}</h3>
+        <small>{shortDateRange(item.startDate, item.endDate)} · {item.place.province}</small>
+      </div>
     </article>
   );
 }
