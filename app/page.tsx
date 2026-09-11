@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { Alert, Button, DatePicker, Form, InputNumber, Select, Spin, Tag } from "antd";
 import { ArrowRightOutlined, CloudOutlined, CompassOutlined, DashboardOutlined, EnvironmentOutlined, ExperimentOutlined, SettingOutlined } from "@ant-design/icons";
@@ -283,13 +283,9 @@ export default function Home() {
             <div><p className="eyebrow">02 / ผลลัพธ์จากข้อมูลจริง</p><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2><p>{dateLabel(results.search.startDate)} – {dateLabel(results.search.endDate)} · {results.search.tripDays} วัน</p></div>
             <Tag color={activeGroup?.mode === "forecast" ? "blue" : "green"}>{activeGroup?.mode === "forecast" ? "Forecast" : "Seasonal"}</Tag>
           </div>
-          <Alert className="provenance-alert" type="info" showIcon title="ผลนี้คำนวณจากข้อมูลที่มีแหล่งที่มา" description={results.warnings.join(" ")} />
           <div className="results-layout">
             <div className="cards-grid">
-              {resultGroups.map((group) => <div className="result-group" key={`${group.mode}-${group.status}`}>
-                <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
-                {group.items.map((item, index) => <PlaceCard item={item} index={index} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => loadDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}
-              </div>)}
+              {resultGroups.map((group) => <ResultGroup group={group} details={details} detailLoading={detailLoading} onDetail={(item, mode) => loadDetail(item, mode)} key={`${group.mode}-${group.status}`} />)}
             </div>
             <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} />
           </div>
@@ -344,12 +340,61 @@ function PlaceCard({ item, index, status, mode, detail, detailLoading, onDetail 
   );
 }
 
+function ResultGroup({ group, details, detailLoading, onDetail }: { group: { mode: string; status: string; items: Item[] }; details: Record<string, Item["details"]>; detailLoading: string | null; onDetail: (item: Item, mode: string) => void }) {
+  const [visibleCount, setVisibleCount] = useState(9);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (visibleCount >= group.items.length || !sentinelRef.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) setVisibleCount((count) => Math.min(count + 9, group.items.length));
+    }, { rootMargin: "320px" });
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [group.items.length, visibleCount]);
+  const visibleItems = group.items.slice(0, visibleCount);
+  return <div className="result-group">
+    <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
+    <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => onDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}</div>
+    {visibleCount < group.items.length && <div ref={sentinelRef} className="lazy-sentinel" aria-label="กำลังเตรียมสถานที่เพิ่มเติม">เลื่อนลงเพื่อดูสถานที่เพิ่มเติม</div>}
+  </div>;
+}
+
 function MapPanel({ places }: { places: Place[] }) {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<import("maplibre-gl").Map | null>(null);
+  const [mapError, setMapError] = useState(false);
   const uniquePlaces = Array.from(new Map(places.map((place) => [place.id, place])).values());
+  const placeKey = uniquePlaces.map((place) => `${place.id}:${place.latitude}:${place.longitude}`).join("|");
+  useEffect(() => {
+    let disposed = false;
+    setMapError(false);
+    import("maplibre-gl").then(({ Map, Marker, NavigationControl, Popup }) => {
+      if (disposed || !mapContainerRef.current) return;
+      const map = new Map({ container: mapContainerRef.current, style: "https://tiles.openfreemap.org/styles/liberty", center: [100.5, 13.7], zoom: 5 });
+      map.addControl(new NavigationControl(), "top-right");
+      map.on("error", () => setMapError(true));
+      uniquePlaces.forEach((place) => {
+        const marker = document.createElement("button");
+        marker.type = "button";
+        marker.className = "map-marker";
+        marker.setAttribute("aria-label", `ดู ${place.name}`);
+        marker.title = place.name;
+        new Marker({ element: marker, anchor: "bottom" }).setLngLat([place.longitude, place.latitude]).setPopup(new Popup({ offset: 18 }).setText(place.name)).addTo(map);
+      });
+      mapRef.current = map;
+      map.once("load", () => map.resize());
+    }).catch(() => setMapError(true));
+    return () => {
+      disposed = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [placeKey]);
   return <div className="map-panel">
     <div className="map-heading"><div><p className="eyebrow">03 / ภาพรวมพื้นที่</p><h3>24 จุดหมายธรรมชาติ</h3></div><EnvironmentOutlined /></div>
-    <iframe title="แผนที่ OpenStreetMap จุดหมายประเทศไทย" src="https://www.openstreetmap.org/export/embed.html?bbox=97.0%2C5.5%2C105.8%2C20.6&layer=mapnik" loading="lazy" />
-    <p className="map-credit">แผนที่ © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · หมุดใช้พิกัดอ้างอิงจาก DNP</p>
+    <div ref={mapContainerRef} className="map-canvas" aria-label="แผนที่ MapLibre จุดหมายประเทศไทย" />
+    {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" description="รายการสถานที่ยังใช้งานได้ ตรวจพิกัดได้จากรายการด้านล่าง" />}
+    <p className="map-credit">MapLibre GL JS · แผนที่ OpenFreeMap © OpenMapTiles © OpenStreetMap · หมุดคือพิกัดอ้างอิงจาก DNP</p>
     <div className="map-place-list" aria-label="รายการจุดอ้างอิงจาก catalog">
       {uniquePlaces.map((place) => <div className="map-place" data-place-id={place.id} key={place.id}><span>{place.name}</span><small>{place.latitude.toFixed(4)}, {place.longitude.toFixed(4)}</small></div>)}
     </div>
