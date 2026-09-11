@@ -153,3 +153,6 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
   .weight-row label { grid-template-columns: 64px minmax(0, 1fr); }
   .weight-row .ant-select, .weight-row .ant-select-selector { width: 100%; }
 }
+
+/* Allow the one-column result layout to shrink cleanly at the 320px minimum. */
+.map-panel { min-width: 0; }
