@@ -70,7 +70,10 @@ function dateLabel(date: string) {
 }
 
 function shortDateRange(start: string, end: string) {
-  const format = (date: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "numeric", timeZone: "Asia/Bangkok" }).format(new Date(`${date}T00:00:00+07:00`));
+  const format = (date: string) => {
+    const [, month, day] = date.split("-");
+    return `${Number(day)}/${Number(month)}`;
+  };
   return start === end ? format(start) : `${format(start)}–${format(end)}`;
 }
 
