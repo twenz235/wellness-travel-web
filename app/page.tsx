@@ -34,13 +34,6 @@ type Item = {
   requirements: { key: string; status: string; reason?: string }[];
   reasons: { code: string; message?: string; fields?: string[]; key?: string }[];
   sourceIds: string[];
-  details?: {
-    daily?: { date: string; temperatureMeanC?: number; rainMeanMm?: number; pm25MeanUgm3?: number; usAqiPm25?: number; temperatureScore?: number; rainScore?: number; airScore?: number; observedHours: number; expectedHours: number; airObservedHours: number; airExpectedHours: number; missing?: string[] }[];
-    hourly?: { at: string; temperatureC?: number; rainMm?: number; airDate: string; temperatureValid: boolean; rainValid: boolean }[];
-    sources?: { id: string; provider: string; model: string; retrievedAt: string; sourceUrl: string }[];
-    seasonalYears?: { year: number; temperatureMeanC?: number; rainMeanMm?: number; airDailyAqiMean?: number; weatherCoverage: number; airValidDays: number; airExpectedDays: number }[];
-    yearOutlook?: { month: string; anomalyK: number; baselineDescription: string; scoreAdjusted: boolean };
-  };
 };
 type ApiResponse = {
   requestId: string;
