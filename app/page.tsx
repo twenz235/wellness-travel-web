@@ -62,6 +62,21 @@ const RESULT_PAGE_SIZES = [12, 24, 48, 96] as const;
 const DEFAULT_RESULT_PAGE_SIZE = RESULT_PAGE_SIZES[0];
 
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
+const rainPreferenceNames: Record<string, string> = { dry: "ไม่มีฝน", light: "ฝนเล็กน้อย", moderate: "ฝนปานกลาง" };
+const regionNames: Record<string, string> = {
+  north: "ภาคเหนือ",
+  northeast: "ภาคตะวันออกเฉียงเหนือ",
+  central_west_east: "ภาคกลาง ตะวันตก และตะวันออก",
+  south: "ภาคใต้",
+};
+
+function rainPreferenceLabel(preference?: string) {
+  return preference ? rainPreferenceNames[preference] ?? preference : "-";
+}
+
+function regionLabel(region?: string) {
+  return region ? regionNames[region] ?? region : "-";
+}
 
 function shortDateRange(start: string, end: string) {
   const format = (date: string) => {
@@ -288,7 +303,7 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div className="brand-mark"><span>W</span><div><strong>Wellness Travel</strong><small>พักให้ตรงใจ</small></div></div>
+        <div className="brand-mark"><span>W</span><div><strong>Wellness Travel</strong></div></div>
         <Button className="profile-button" icon={<SettingOutlined />} onClick={() => { setProfileDraft(profile ?? defaultProfile); setShowProfile(true); }}>ความชอบ</Button>
       </header>
 
@@ -318,7 +333,7 @@ export default function Home() {
           </div>
         </div>
         <div className="search-footer">
-          {results && <div className="profile-chip"><span className="chip-dot" /> อากาศ {profile?.temperature.minC}–{profile?.temperature.maxC}°C · ฝน{profile?.rain.preference === "light" ? "เบา" : profile?.rain.preference === "moderate" ? "กลาง" : "น้อย"} · ฝุ่นตาม AQI</div>}
+          {results && <div className="profile-chip"><span className="chip-dot" /> อากาศ {profile?.temperature.minC}–{profile?.temperature.maxC}°C · {rainPreferenceLabel(profile?.rain.preference)} · ฝุ่นตาม AQI</div>}
           <Button type="primary" size="large" onClick={search} loading={loading} className="search-button" icon={<SearchOutlined aria-hidden="true" />} iconPosition="end">ค้นหา</Button>
         </div>
       </section>
@@ -369,7 +384,7 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
             <div className="inline-fields"><InputNumber size="large" min={-10} max={50} value={draft.temperature.minC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, minC: Number(v ?? 0) } })} /><span>ถึง</span><InputNumber size="large" min={-10} max={50} value={draft.temperature.maxC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, maxC: Number(v ?? 0) } })} /></div>
           </Form.Item>
           <Form.Item label="ฝนที่ยอมรับได้">
-            <Select size="large" value={draft.rain.preference} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, preference: v } })} options={[{ value: "dry", label: "ไม่ชอบฝน" }, { value: "light", label: "ฝนเบาได้" }, { value: "moderate", label: "ฝนปานกลางได้" }]} />
+            <Select size="large" value={draft.rain.preference} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, preference: v } })} options={[{ value: "dry", label: "ไม่มีฝน" }, { value: "light", label: "ฝนเล็กน้อย" }, { value: "moderate", label: "ฝนปานกลาง" }]} />
           </Form.Item>
           <Form.Item label="น้ำหนักความสำคัญ">
             <div className="weight-row"><label>อุณหภูมิ <Select size="large" value={draft.temperature.weight} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝน <Select size="large" value={draft.rain.weight} onChange={(v) => setDraft({ ...draft, rain: { ...draft.rain, weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label><label>ฝุ่น <Select size="large" value={draft.air.weight} onChange={(v) => setDraft({ ...draft, air: { weight: v } })} options={[1, 2, 3].map((v) => ({ value: v, label: `${v}` }))} /></label></div>
@@ -477,7 +492,7 @@ function MapPanel({ places, focusPlaceId, onFocusPlace }: { places: Place[]; foc
     map.flyTo({ center: [place.longitude, place.latitude], zoom: map.getZoom(), essential: true });
   }, [focusPlaceId, mapReady, placeKey]);
   return <div className="map-panel" data-focused-place-id={focusPlaceId ?? undefined}>
-    <div className="map-heading"><div><h3>24 จุดหมายธรรมชาติ</h3></div><EnvironmentOutlined /></div>
+    <div className="map-heading"><div><h3>แผนที่</h3></div><EnvironmentOutlined /></div>
     <div ref={mapContainerRef} className="map-canvas" aria-label="แผนที่จุดหมายประเทศไทย" />
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" description="รายการสถานที่ยังใช้งานได้ ตรวจพิกัดได้จากรายการด้านล่าง" />}
     <div className="map-place-list" aria-label="รายการจุดอ้างอิงจาก catalog">

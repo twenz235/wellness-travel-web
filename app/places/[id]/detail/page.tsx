@@ -74,7 +74,7 @@ type Profile = {
   air: { weight: number };
 };
 type Coordinates = { latitude: number; longitude: number };
-type Route = { coordinates: [number, number][]; distanceKm: number; road: boolean };
+type Route = { coordinates: [number, number][]; distanceKm: number };
 
 const defaultProfile: Profile = {
   tripDays: 2,
@@ -84,6 +84,21 @@ const defaultProfile: Profile = {
 };
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
 const factorNames: Record<string, string> = { temperature: "อุณหภูมิ", rain: "ฝน", air: "ฝุ่น" };
+const rainPreferenceNames: Record<string, string> = { dry: "ไม่มีฝน", light: "ฝนเล็กน้อย", moderate: "ฝนปานกลาง" };
+const regionNames: Record<string, string> = {
+  north: "ภาคเหนือ",
+  northeast: "ภาคตะวันออกเฉียงเหนือ",
+  central_west_east: "ภาคกลาง ตะวันตก และตะวันออก",
+  south: "ภาคใต้",
+};
+
+function rainPreferenceLabel(preference?: string) {
+  return preference ? rainPreferenceNames[preference] ?? preference : "-";
+}
+
+function regionLabel(region?: string) {
+  return region ? regionNames[region] ?? region : "-";
+}
 
 function shortDateRange(start: string, end: string) {
   const format = (date: string) => {
@@ -228,7 +243,7 @@ function DetailContent({ item, status, scoringProfile, requestedMode, profile }:
         <div className="detail-hero-copy">
           <div className="detail-kicker"><Tag color={mode === "forecast" ? "blue" : "green"}>{mode === "forecast" ? "Forecast" : "Seasonal"}</Tag><Tag>{statusNames[status] ?? status}</Tag></div>
           <h1>{item.place.name}</h1>
-          <p className="detail-location"><EnvironmentOutlined /> {item.place.province} · {item.place.region}</p>
+          <p className="detail-location"><EnvironmentOutlined /> {item.place.province} · {regionLabel(item.place.region)}</p>
           <p className="detail-date">ช่วงที่แนะนำ {shortDateRange(item.startDate, item.endDate)}</p>
           <p className="detail-coordinate-note">พิกัดอ้างอิงของ{item.place.placeType === "national_park" ? "อุทยาน" : "สถานที่"} · ไม่ใช่ตำแหน่งลานกางเต็นท์</p>
         </div>
@@ -243,7 +258,7 @@ function DetailContent({ item, status, scoringProfile, requestedMode, profile }:
       </section>
 
       <section className="detail-section detail-summary-section" aria-labelledby="summary-title">
-        <div className="detail-section-heading"><div><p className="eyebrow">AT A GLANCE</p><h2 id="summary-title">ภาพรวม</h2></div><span className="detail-coverage">ข้อมูลที่ใช้ {item.coverage.observedWeightedRatio > 0 ? `${Math.round(item.coverage.observedWeightedRatio * 100)}%` : "-"}</span></div>
+        <div className="detail-section-heading"><div><h2 id="summary-title">ภาพรวม</h2></div><span className="detail-coverage">ข้อมูลที่ใช้ {item.coverage.observedWeightedRatio > 0 ? `${Math.round(item.coverage.observedWeightedRatio * 100)}%` : "-"}</span></div>
         <div className="detail-metric-grid">
           <DetailMetric label="อุณหภูมิ" value={value(item.metrics?.temperatureC, 1, "°C")} icon="temperature" />
           <DetailMetric label="ฝน" value={value(item.metrics?.rainMmPerHour, 2, " mm")} icon="rain" />
@@ -252,7 +267,7 @@ function DetailContent({ item, status, scoringProfile, requestedMode, profile }:
         <div className="factor-grid">
           {item.factors.map((factor) => <div className="factor-detail" key={factor.factor}><span>{factorNames[factor.factor] ?? factor.factor}</span><strong>{factor.score == null ? "-" : factor.score.toFixed(1)}</strong><small>{factor.availableHours}/{factor.expectedHours} ชั่วโมงที่มีข้อมูล</small></div>)}
         </div>
-        {profile && scoringProfile === "user" && <p className="detail-preference-note">ความชอบที่ใช้: {profile.temperature.minC}–{profile.temperature.maxC}°C · ฝน{profile.rain.preference === "dry" ? "ไม่ชอบ" : profile.rain.preference === "light" ? "เบา" : "ปานกลาง"} · น้ำหนักอุณหภูมิ/ฝน/ฝุ่น {profile.temperature.weight}/{profile.rain.weight}/{profile.air.weight}</p>}
+        {profile && scoringProfile === "user" && <p className="detail-preference-note">ความชอบที่ใช้: {profile.temperature.minC}–{profile.temperature.maxC}°C · {rainPreferenceLabel(profile.rain.preference)}</p>}
       </section>
 
       <section className="detail-map-section detail-section" aria-label="เส้นทางไปสถานที่">
@@ -317,17 +332,8 @@ function DetailMap({ place }: { place: Place }) {
       setRoute(null);
       return;
     }
-    const fallback: Route = { coordinates: [[userLocation.longitude, userLocation.latitude], [place.longitude, place.latitude]], distanceKm: haversineKm(userLocation, place), road: false };
+    const fallback: Route = { coordinates: [[userLocation.longitude, userLocation.latitude], [place.longitude, place.latitude]], distanceKm: haversineKm(userLocation, place) };
     setRoute(fallback);
-    const controller = new AbortController();
-    fetch(`https://router.project-osrm.org/route/v1/driving/${userLocation.longitude},${userLocation.latitude};${place.longitude},${place.latitude}?overview=full&geometries=geojson`, { signal: controller.signal })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error("route unavailable")))
-      .then((data: { routes?: { distance: number; geometry?: { coordinates?: [number, number][] } }[] }) => {
-        const first = data.routes?.[0];
-        if (first?.geometry?.coordinates?.length) setRoute({ coordinates: first.geometry.coordinates, distanceKm: first.distance / 1000, road: true });
-      })
-      .catch(() => undefined);
-    return () => controller.abort();
   }, [place, userLocation]);
 
   useEffect(() => {
@@ -394,7 +400,7 @@ function DetailMap({ place }: { place: Place }) {
     <div ref={mapContainerRef} className="detail-map-canvas" aria-label={`แผนที่เส้นทางไป ${place.name}`} />
     <div className="detail-map-legend"><span><i className="legend-dot legend-user" /> ตำแหน่งของฉัน</span><span><i className="legend-dot legend-place" /> {place.name}</span></div>
     {mapError && <Alert className="map-alert" type="warning" showIcon title="แผนที่โหลดไม่สำเร็จ" />}
-    <div className="detail-route-summary"><div><strong>{route ? `${route.distanceKm.toFixed(1)} กม.` : "-"}</strong><span>{route?.road ? "ระยะทางตามเส้นทางรถยนต์" : "ระยะทางเส้นตรงโดยประมาณ"}</span></div><div className="route-status">{locationState === "ready" ? "มีตำแหน่งผู้ใช้" : locationState === "loading" ? "กำลังอ่านตำแหน่ง…" : "ยังไม่มีตำแหน่งผู้ใช้"}<Button type="link" size="small" onClick={requestLocation}>ใช้ตำแหน่งของฉัน</Button></div></div>
+    <div className="detail-route-summary"><div><strong>{route ? `${route.distanceKm.toFixed(1)} กม.` : "-"}</strong><span>ระยะทางโดยประมาณ</span></div><div className="route-status">{locationState === "ready" ? "มีตำแหน่งผู้ใช้" : locationState === "loading" ? "กำลังอ่านตำแหน่ง…" : "ยังไม่มีตำแหน่งผู้ใช้"}<Button type="link" size="small" onClick={requestLocation}>ใช้ตำแหน่งของฉัน</Button></div></div>
     <p className="detail-map-note">พิกัดสถานที่เป็นจุดอ้างอิงของอุทยาน/สถานที่ ไม่ใช่ตำแหน่งลานกางเต็นท์ · แผนที่ © OpenFreeMap © OpenStreetMap contributors</p>
   </div>;
 }
