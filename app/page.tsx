@@ -368,7 +368,6 @@ function HomeRecommendationCard({ item, index }: { item: Item; index: number }) 
     <article className="inspiration-card home-recommendation-card">
       <img src={image} alt="" aria-hidden="true" />
       <div>
-        <small>อันดับ {index + 1} · คะแนน {item.score == null ? "—" : item.score.toFixed(1)}</small>
         <h3>{item.place.name}</h3>
         <small>{shortDateRange(item.startDate, item.endDate)} · {item.place.province}</small>
       </div>
