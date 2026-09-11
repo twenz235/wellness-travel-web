@@ -60,10 +60,6 @@ const defaultProfile: Profile = {
 
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
 
-function dateLabel(date: string) {
-  return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${date}T00:00:00+07:00`));
-}
-
 function shortDateRange(start: string, end: string) {
   const format = (date: string) => {
     const [, month, day] = date.split("-");
@@ -283,7 +279,7 @@ export default function Home() {
       </section>
 
       {!results && <section className="inspiration-section" aria-label="สถานที่แนะนำ">
-        <div className="section-heading"><h2>สถานที่แนะนำ</h2></div>
+        <div className="results-heading"><div><h2>สถานที่แนะนำ</h2></div></div>
         {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่ตามความชอบของคุณ…</span></div>}
         {!homeLoading && homeItems.length > 0 && <div className="group-cards home-recommendation-grid">
           {homeItems.map((item, index) => <PlaceCard item={item} index={index} key={`home-${item.placeId}`} />)}
@@ -297,7 +293,7 @@ export default function Home() {
       {results && !loading && (
         <section className="results-section" aria-live="polite">
           <div className="results-heading">
-            <div><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2><p>{dateLabel(results.search.startDate)} – {dateLabel(results.search.endDate)} · {results.search.tripDays} วัน</p></div>
+            <div><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2></div>
             <Tag color={activeGroup?.mode === "forecast" ? "blue" : "green"}>{activeGroup?.mode === "forecast" ? "Forecast" : "Seasonal"}</Tag>
           </div>
           <div className="results-layout">
