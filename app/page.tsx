@@ -239,9 +239,9 @@ export default function Home() {
 
       <section className="hero-section">
         <div className="hero-copy">
-          <p className="eyebrow">ค้นหาสถานที่สำหรับวันหยุด</p>
-          <h1>วันหยุดนี้<br /><em>ไปไหนดี?</em></h1>
-          <p>เลือกวันเดินทาง หรือให้เราหาช่วงที่เหมาะที่สุดภายใน 30 วัน</p>
+          <p className="eyebrow">A LITTLE CLOSER TO NATURE</p>
+          <h1>วันว่างของคุณ<br /><em>ให้ธรรมชาติดูแล</em></h1>
+          <p>หามุมพักใจ ในวันที่อากาศเป็นใจ<br />ตามความชอบในแบบของคุณ</p>
         </div>
         <img className="hero-art" src="/assets/mountains.svg" alt="ภาพวาดภูเขาประกอบบรรยากาศ" />
       </section>
