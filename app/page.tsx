@@ -63,7 +63,7 @@ const defaultProfile: Profile = {
   air: { weight: 3 },
 };
 
-const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไข", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
+const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
 
 function dateLabel(date: string) {
   return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${date}T00:00:00+07:00`));
