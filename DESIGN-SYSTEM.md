@@ -41,6 +41,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 - **Mobile (320–639px):** one card per row, one-column search form, full-width actions, and the map after all cards. The 320px layout is the minimum supported width.
 - **Tablet (640–1023px):** two cards per row; the map moves below the card list so the result flow remains readable.
 - **Laptop and desktop (≥1024px):** three cards per row for the home recommendations and results; the map sits beside the result list above 1200px and moves below it at smaller widths.
+- The desktop search action is aligned to the right edge of the search card; when the post-search preference summary is present it occupies the left side. On mobile the action becomes a full-width stacked button.
 - Results render three rows initially and append more cards through the lazy-load sentinel. The map always represents all available places, including cards not yet rendered.
 
 ## Interaction and state rules
