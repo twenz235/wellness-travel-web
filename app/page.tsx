@@ -219,7 +219,6 @@ export default function Home() {
         <div className="section-kicker"><span>01</span><h2>กำหนดทริป</h2></div>
         <div className="search-grid">
           <div className="field field-wide">
-            <label>วันเดินทาง <span>ไม่เลือกก็ได้</span></label>
             <RangePicker
               value={range}
               onChange={(value) => setRange(value as [Dayjs, Dayjs] | null)}
@@ -227,6 +226,7 @@ export default function Home() {
               size="large"
               format="DD/MM/YYYY"
               placeholder={["วันไป", "วันกลับ"]}
+              aria-label="วันไปและวันกลับ ไม่จำเป็นต้องเลือก"
               disabledDate={(current) => current.isBefore(dateBounds.min, "day") || current.isAfter(dateBounds.max, "day")}
               style={{ width: "100%" }}
             />
