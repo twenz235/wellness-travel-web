@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { Alert, Button, DatePicker, Form, InputNumber, Select, Spin, Tag } from "antd";
-import { ArrowRightOutlined, CompassOutlined, EnvironmentOutlined, SettingOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, CloudOutlined, CompassOutlined, DashboardOutlined, EnvironmentOutlined, ExperimentOutlined, SettingOutlined } from "@ant-design/icons";
 import "./page.css";
 
 const { RangePicker } = DatePicker;
@@ -28,6 +28,7 @@ type Item = {
   startDate: string;
   endDate: string;
   score: number | null;
+  metrics?: { temperatureC?: number; rainMmPerHour?: number; usAqiPm25?: number };
   coverage: { observedWeightedRatio: number; scoredDays: number; requestedDays: number };
   factors: Factor[];
   requirements: { key: string; status: string; reason?: string }[];
@@ -62,15 +63,15 @@ const defaultProfile: Profile = {
   air: { weight: 3 },
 };
 
-const factorNames: Record<string, string> = { temperature: "อุณหภูมิ", rain: "ฝน", air: "ฝุ่น" };
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไข", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
-
-function formatScore(score: number | null) {
-  return score == null ? "—" : `${Math.round(score)}`;
-}
 
 function dateLabel(date: string) {
   return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${date}T00:00:00+07:00`));
+}
+
+function shortDateRange(start: string, end: string) {
+  const format = (date: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "numeric", timeZone: "Asia/Bangkok" }).format(new Date(`${date}T00:00:00+07:00`));
+  return start === end ? format(start) : `${format(start)}–${format(end)}`;
 }
 
 export default function Home() {
@@ -284,7 +285,7 @@ export default function Home() {
             <div className="cards-grid">
               {resultGroups.map((group) => <div className="result-group" key={`${group.mode}-${group.status}`}>
                 <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>
-                {group.items.map((item, index) => <PlaceCard item={item} rank={index + 1} groupStatus={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => loadDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}
+                {group.items.map((item) => <PlaceCard item={item} status={group.status} mode={group.mode} detail={details[item.placeId]} detailLoading={detailLoading === item.placeId} onDetail={() => loadDetail(item, group.mode)} key={`${group.status}-${item.placeId}`} />)}
               </div>)}
             </div>
             <MapPanel places={catalogPlaces.length > 0 ? catalogPlaces : resultGroups.flatMap((group) => group.items.map((item) => item.place))} />
@@ -322,21 +323,19 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
   );
 }
 
-function PlaceCard({ item, rank, groupStatus, mode, detail, detailLoading, onDetail }: { item: Item; rank: number; groupStatus: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
-  const status = groupStatus;
+function PlaceCard({ item, status, mode, detail, detailLoading, onDetail }: { item: Item; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
   return (
     <article className="place-card" data-place-id={item.placeId} data-status={status}>
-      <div className={`place-art art-${(rank - 1) % 5}`}><span>{String(rank).padStart(2, "0")}</span><EnvironmentOutlined /></div>
-      <div className="place-body">
-        <div className="place-title"><span className="rank">#{rank}</span><h3>{item.place.name}</h3></div>
-        <p className="place-meta">{item.place.province} · {item.place.region} · {item.place.coordinateRole.replaceAll("_", " ")}</p>
-        <p className="place-window">ช่วงแนะนำ {dateLabel(item.startDate)} – {dateLabel(item.endDate)}</p>
-        <div className="score-row"><div className="score"><strong>{formatScore(item.score)}</strong><span>/ 100</span></div><Tag color={status === "matched" ? "green" : "gold"}>{statusNames[status]}</Tag></div>
-        <div className="factor-row">{item.factors.map((factor) => <span key={factor.factor}><b>{factorNames[factor.factor]}</b> {factor.score == null ? "—" : Math.round(factor.score)}</span>)}</div>
-        <details><summary>ดูเหตุผลและแหล่งข้อมูล</summary><p>{item.reasons.map((reason) => reason.message ?? reason.code).join(" ")}</p><p>dataset: <code>{item.sourceIds.join(", ")}</code></p><a href={item.place.sourceUrl} target="_blank" rel="noreferrer">แหล่งข้อมูลสถานที่ DNP ↗</a></details>
-        <Button size="small" onClick={onDetail} loading={detailLoading}>ดูรายละเอียดรายวัน/รายชั่วโมง</Button>
-        {detail && <DetailSummary detail={detail} mode={mode} />}
-      </div>
+      <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading} aria-label={`ดูรายละเอียด ${item.place.name}`}>
+        <span className="place-title"><strong>{item.place.name}</strong></span>
+        <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>
+        <span className="metric-list">
+          <span className="metric metric-temperature" title="อุณหภูมิเฉลี่ย"><strong>{item.metrics?.temperatureC == null ? "—" : `${item.metrics.temperatureC.toFixed(1)}°`}</strong><DashboardOutlined aria-hidden="true" /></span>
+          <span className="metric metric-rain" title="ฝนเฉลี่ยต่อชั่วโมง"><strong>{item.metrics?.rainMmPerHour == null ? "—" : `${item.metrics.rainMmPerHour.toFixed(2)} mm`}</strong><CloudOutlined aria-hidden="true" /></span>
+          <span className="metric metric-air" title="US AQI จาก PM2.5 เฉลี่ยวัน"><strong>{item.metrics?.usAqiPm25 == null ? "—" : `AQI ${item.metrics.usAqiPm25}`}</strong><ExperimentOutlined aria-hidden="true" /></span>
+        </span>
+      </button>
+      {detail && <div className="place-detail"><DetailSummary detail={detail} mode={mode} /></div>}
     </article>
   );
 }
