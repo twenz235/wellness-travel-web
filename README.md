@@ -11,7 +11,7 @@ NEXT_PUBLIC_API_BASE=http://127.0.0.1:8080 npm run dev -- --hostname 127.0.0.1
 
 Start `wellness-travel-api` separately and set its `CORS_ORIGIN` to the web origin. Use `npm run build` for the production build check.
 
-For Vercel, deploy this directory as a separate Next.js project and set `NEXT_PUBLIC_API_BASE` to the deployed API origin (for example, `https://wellness-travel-api-<team>.vercel.app`). The API origin must not include a trailing slash.
+For Vercel, deploy this directory as the separate Next.js project `wellness-travel-web` and set `NEXT_PUBLIC_API_BASE=https://wt-api.flozy.app` in Production. The public Web URL is `https://wt.flozy.app`; API origin must not include a trailing slash.
 
 The UI keeps the place coordinate caveat visible. Provider and dataset provenance remain in the API response and test evidence rather than on the detail screen. Flexible searches are historical Seasonal recommendations; explicit dates use the checked-in Open-Meteo/CAMS forecast snapshots and show incomplete coverage when a factor is unavailable. The app does not expose a Supabase service key.
 
