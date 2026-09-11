@@ -32,7 +32,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 | Results | `.results-section`, `.result-group`, `.group-cards`, `.place-card` | Separate complete, incomplete, and non-matching statuses. |
 | Map | `.map-panel`, `.map-canvas`, `.map-marker` | MapLibre/OpenFreeMap overview with one marker per place. |
 | Map focus | `.place-card-button`, `.map-marker`, `.map-place` | Selecting a place name flies the map to that marker without expanding the card. |
-| Preferences | `.panel-backdrop`, `.profile-panel` | Edit saved user preferences; cancel restores the last saved value. |
+| Preferences | `.panel-backdrop`, `.profile-panel` | Edit saved user preferences, including the default 1–30 day flexible-trip length; cancel restores the last saved value. |
 
 ## Responsive rules
 
@@ -44,7 +44,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 ## Interaction and state rules
 
 1. First visit shows the landing page. Saving preferences stores them in the browser and opens the search page; later visits skip onboarding.
-2. The date range is optional. With no dates, the API searches the next 30 days using the saved trip length. A selected trip may be 1–30 days.
+2. The date range is optional. With no dates, the API searches the next 30 days using the saved 1–30 day trip length from the preferences panel; the search form does not repeat that field.
 3. `national_park` is the only hard requirement. Temperature, rain, and AQI affect scores and explanations.
 4. Result status is explicit: `ผ่านเงื่อนไขและข้อมูลครบ`, `ข้อมูลยังไม่ครบ`, or `ไม่ตรงเงื่อนไข`.
 5. Selecting a place name calls `flyTo` with the current zoom. On mobile the map is read-only (no pan, zoom, rotate, touch, or keyboard map interactions); tablet and desktop keep map controls enabled.

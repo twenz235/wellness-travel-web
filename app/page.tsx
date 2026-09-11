@@ -45,12 +45,14 @@ type ApiResponse = {
   warnings: string[];
 };
 type Profile = {
+  tripDays: number;
   temperature: { minC: number; maxC: number; weight: number };
   rain: { preference: string; weight: number };
   air: { weight: number };
 };
 
 const defaultProfile: Profile = {
+  tripDays: 2,
   temperature: { minC: 20, maxC: 26, weight: 2 },
   rain: { preference: "light", weight: 1 },
   air: { weight: 3 },
@@ -76,7 +78,6 @@ export default function Home() {
   const [showLanding, setShowLanding] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null);
-  const [tripDays, setTripDays] = useState(2);
   const [period, setPeriod] = useState("all");
   const [results, setResults] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -89,9 +90,17 @@ export default function Home() {
     try {
       const stored = window.localStorage.getItem("wellness-profile");
       if (stored) {
-        const parsed = JSON.parse(stored) as Profile;
-        setProfile(parsed);
-        setProfileDraft(parsed);
+        const parsed = JSON.parse(stored) as Partial<Profile>;
+        const normalized: Profile = {
+          ...defaultProfile,
+          ...parsed,
+          tripDays: Number.isFinite(parsed.tripDays) ? Math.min(30, Math.max(1, Number(parsed.tripDays))) : defaultProfile.tripDays,
+          temperature: { ...defaultProfile.temperature, ...(parsed.temperature ?? {}) },
+          rain: { ...defaultProfile.rain, ...(parsed.rain ?? {}) },
+          air: { ...defaultProfile.air, ...(parsed.air ?? {}) },
+        };
+        setProfile(normalized);
+        setProfileDraft(normalized);
         setShowLanding(false);
       }
     } catch {
@@ -135,9 +144,9 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dates: range ? { startDate: range[0].format("YYYY-MM-DD"), endDate: range[1].format("YYYY-MM-DD") } : null,
-          tripDays,
+          tripDays: profile.tripDays,
           period,
-          preferences: profile,
+          preferences: { temperature: profile.temperature, rain: profile.rain, air: profile.air },
           requirements: { placeType: "national_park" },
         }),
       });
@@ -222,7 +231,7 @@ export default function Home() {
               disabledDate={(current) => current.isBefore(dateBounds.min, "day") || current.isAfter(dateBounds.max, "day")}
               style={{ width: "100%" }}
             />
-            {!range && <small className="field-help">ไม่เลือกวัน: ค้นหาช่วงดีที่สุดภายใน 30 วัน · เริ่มต้น {tripDays} วัน</small>}
+            {!range && <small className="field-help">ไม่เลือกวัน: ค้นหาช่วงดีที่สุดภายใน 30 วัน · เริ่มต้น {profile?.tripDays ?? defaultProfile.tripDays} วัน</small>}
           </div>
           <div className="field">
             <label>ช่วงเวลาที่ชอบ</label>
@@ -277,6 +286,9 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
         <h2>ความชอบของฉัน</h2>
         <p className="panel-intro">บอกสภาพที่ทำให้คุณพักได้เต็มที่ ระบบจะใช้ค่านี้จัดอันดับทุกครั้ง</p>
         <Form layout="vertical">
+          <Form.Item label="ระยะทริปเมื่อไม่เลือกวัน">
+            <Select size="large" value={draft.tripDays} onChange={(v) => setDraft({ ...draft, tripDays: v })} options={Array.from({ length: 30 }, (_, index) => index + 1).map((v) => ({ value: v, label: `${v} วัน` }))} />
+          </Form.Item>
           <Form.Item label="อุณหภูมิที่สบาย (°C)">
             <div className="inline-fields"><InputNumber size="large" min={-10} max={50} value={draft.temperature.minC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, minC: Number(v ?? 0) } })} /><span>ถึง</span><InputNumber size="large" min={-10} max={50} value={draft.temperature.maxC} onChange={(v) => setDraft({ ...draft, temperature: { ...draft.temperature, maxC: Number(v ?? 0) } })} /></div>
           </Form.Item>
