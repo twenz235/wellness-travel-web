@@ -293,7 +293,7 @@ export default function Home() {
       {results && !loading && (
         <section className="results-section" aria-live="polite">
           <div className="results-heading">
-            <div><h2>{results.search.kind === "flexible" ? "ช่วงที่เหมาะกับคุณ" : "สถานที่สำหรับทริปนี้"}</h2></div>
+            <div><h2>{results.search.kind === "flexible" ? "สถานที่สำหรับคุณ" : "สถานที่สำหรับทริปนี้"}</h2></div>
             <Tag color={activeGroup?.mode === "forecast" ? "blue" : "green"}>{activeGroup?.mode === "forecast" ? "Forecast" : "Seasonal"}</Tag>
           </div>
           <div className="results-layout">
