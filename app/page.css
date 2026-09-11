@@ -103,7 +103,6 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
   .landing-copy { order: 0; }
   .landing-postcard { order: 1; width: min(100%, 340px); align-self: center; }
   .landing-button { order: 2; align-self: stretch; }
-  .landing-note { order: 3; }
   .landing-copy h1 { font-size: 52px; }
   .landing-copy > p:last-child { font-size: 15px; }
   .hero-section { min-height: 280px; padding-top: 42px; }
