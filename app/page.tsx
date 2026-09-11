@@ -274,7 +274,7 @@ export default function Home() {
           </div>
         </div>
         <div className="search-footer">
-          <div className="profile-chip"><span className="chip-dot" /> อากาศ {profile?.temperature.minC}–{profile?.temperature.maxC}°C · ฝน{profile?.rain.preference === "light" ? "เบา" : profile?.rain.preference === "moderate" ? "กลาง" : "น้อย"} · ฝุ่นตาม AQI</div>
+          {results && <div className="profile-chip"><span className="chip-dot" /> อากาศ {profile?.temperature.minC}–{profile?.temperature.maxC}°C · ฝน{profile?.rain.preference === "light" ? "เบา" : profile?.rain.preference === "moderate" ? "กลาง" : "น้อย"} · ฝุ่นตาม AQI</div>}
           <Button type="primary" size="large" onClick={search} loading={loading} className="search-button" icon={<SearchOutlined aria-hidden="true" />} iconPosition="end">ค้นหา</Button>
         </div>
       </section>
