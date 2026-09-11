@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { Alert, Button, DatePicker, Form, InputNumber, Select, Spin, Tag } from "antd";
-import { ArrowRightOutlined, CloudOutlined, CompassOutlined, DashboardOutlined, EnvironmentOutlined, ExperimentOutlined, SettingOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, CloudOutlined, DashboardOutlined, EnvironmentOutlined, ExperimentOutlined, SettingOutlined } from "@ant-design/icons";
 import "./page.css";
 
 const { RangePicker } = DatePicker;
@@ -210,14 +210,17 @@ export default function Home() {
   if (showLanding) {
     return (
       <main className="landing-page">
-        <div className="landing-art" aria-hidden="true"><span>W</span></div>
         <div className="landing-copy">
           <p className="eyebrow">WELLNESS TRAVEL</p>
-          <h1>พักให้ตรงใจ<br /><em>กับอากาศที่ใช่</em></h1>
-          <p>ค้นหาธรรมชาติสำหรับวันหยุดของคุณ โดยดูอุณหภูมิ ฝน และฝุ่นจากข้อมูลที่มีที่มา</p>
+          <h1>ออกไปพักใจ<br /><em>ในวันที่ใช่สำหรับคุณ</em></h1>
+          <p>ค้นพบธรรมชาติที่เข้ากับความชอบ โดยดูอุณหภูมิ ฝน และฝุ่นจากข้อมูลที่มีที่มา</p>
+        </div>
+        <div className="landing-postcard">
+          <img src="/assets/mountains.svg" alt="ภาพวาดภูเขาสำหรับการพักผ่อน" />
+          <span>Find your little escape.</span>
         </div>
         <Button type="primary" size="large" className="landing-button" onClick={() => setShowProfile(true)}>
-          เริ่มตั้งค่าความชอบ <ArrowRightOutlined />
+          เริ่มต้นการเดินทาง <ArrowRightOutlined />
         </Button>
         <p className="landing-note">ใช้เวลาไม่ถึง 1 นาที · แก้ไขได้ทุกเมื่อ</p>
         {showProfile && <ProfilePanel draft={profileDraft} setDraft={setProfileDraft} onSave={saveProfile} onCancel={cancelProfile} />}
@@ -240,7 +243,7 @@ export default function Home() {
           <h1>วันหยุดนี้<br /><em>ไปไหนดี?</em></h1>
           <p>เลือกวันเดินทาง หรือให้เราหาช่วงที่เหมาะที่สุดภายใน 30 วัน</p>
         </div>
-        <div className="hero-orb" aria-hidden="true"><CompassOutlined /></div>
+        <img className="hero-art" src="/assets/mountains.svg" alt="ภาพวาดภูเขาประกอบบรรยากาศ" />
       </section>
 
       <section className="search-card" aria-label="ค้นหาสถานที่">
@@ -273,6 +276,16 @@ export default function Home() {
           <Button type="primary" size="large" onClick={search} loading={loading} className="search-button">หาที่เที่ยวให้ฉัน <ArrowRightOutlined /></Button>
         </div>
       </section>
+
+      {!results && <section className="inspiration-section" aria-label="แนวทางการพักผ่อน">
+        <div className="section-heading"><h2>สถานที่แนะนำ</h2><small>ภาพประกอบแนวคิด<br />ยังไม่ใช่ผลตามความชอบ</small></div>
+        <div className="inspiration-grid">
+          <article className="inspiration-card"><img src="/assets/mountains.svg" alt="ภาพวาดภูเขา" /><div><small>01 / MOUNTAIN AIR</small><h3>เช้าท่ามกลางภูเขา</h3><small>ค่อย ๆ ใช้เวลา กับวิวตรงหน้า</small></div></article>
+          <article className="inspiration-card"><img src="/assets/forest.svg" alt="ภาพวาดป่า" /><div><small>02 / FOREST SLOWDOWN</small><h3>พักในอ้อมกอดป่า</h3><small>วันธรรมดาที่มีธรรมชาติโอบไว้</small></div></article>
+          <article className="inspiration-card"><img src="/assets/lake.svg" alt="ภาพวาดทิวเขาริมน้ำ" /><div><small>03 / QUIET MOMENTS</small><h3>ปล่อยใจให้ช้าลง</h3><small>เว้นที่ว่างให้วันพักผ่อน</small></div></article>
+        </div>
+        <p className="journal-note">จากวันที่คุณว่าง สู่สถานที่ที่เข้ากับคุณ — พร้อมเหตุผลเรื่องอากาศ ฝน และฝุ่น</p>
+      </section>}
 
       {error && <Alert className="page-alert" type="warning" showIcon title={error} />}
       {loading && <div className="loading-state"><Spin /> <span>กำลังอ่านข้อมูลอากาศและจัดอันดับสถานที่…</span></div>}
@@ -325,7 +338,7 @@ function ProfilePanel({ draft, setDraft, onSave, onCancel }: { draft: Profile; s
 function PlaceCard({ item, index, status, mode, detail, detailLoading, onDetail }: { item: Item; index: number; status: string; mode: string; detail?: Item["details"]; detailLoading: boolean; onDetail: () => void }) {
   return (
     <article className="place-card" data-place-id={item.placeId} data-status={status}>
-      <div className={`place-art art-${(index % 4) + 1}`} aria-hidden="true"><EnvironmentOutlined /></div>
+      <img className="place-art" src={index % 3 === 0 ? "/assets/mountains.svg" : index % 3 === 1 ? "/assets/forest.svg" : "/assets/lake.svg"} alt="" aria-hidden="true" />
       <button type="button" className="place-card-button" onClick={onDetail} disabled={detailLoading}>
         <span className="place-title"><strong>{item.place.name}</strong></span>
         <span className="place-window">{shortDateRange(item.startDate, item.endDate)}</span>

@@ -1,4 +1,24 @@
 :root {
+  /* Wellness Travel design tokens — shared by landing, search and result states. */
+  --color-ink: #203b38;
+  --color-muted: #64736f;
+  --color-page: #f7f8f4;
+  --color-card: #ffffff;
+  --color-line: #dce5df;
+  --color-accent: #24657a;
+  --color-accent-dark: #194a5b;
+  --color-soft: #eef1e6;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-control: 12px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
+  --shadow-card: 0 16px 42px rgb(48 94 78 / 5%);
   --ink: #203b38;
   --muted: #64736f;
   --paper: #f7f8f4;
@@ -9,6 +29,6 @@
 }
 * { box-sizing: border-box; }
 html { background: #e9eeeb; }
-body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--font-body), system-ui, sans-serif; }
+body { min-width: 320px; margin: 0; color: var(--ink); background: var(--paper); font-family: var(--font-body), system-ui, sans-serif; }
 button, input, select { font: inherit; }
 a { color: var(--blue); }
