@@ -79,7 +79,7 @@ em { color: var(--blue); font-family: Georgia, serif; font-weight: 400; }
 .metric-list { display: grid; gap: 10px; }
 .metric { display: flex; align-items: center; gap: 10px; min-height: 24px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .metric .anticon { width: 19px; color: var(--blue); font-size: 17px; }
-.metric strong { color: var(--ink); font-size: 15px; font-weight: 650; }
+.metric strong { min-width: 72px; color: var(--ink); font-size: 15px; font-weight: 650; }
 .metric-air .anticon { color: #819b62; }
 .place-detail { padding: 0 16px 16px; }
 .detail-summary .detail-reasons { flex-basis: 100%; margin: 0; line-height: 1.45; }
