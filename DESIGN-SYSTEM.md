@@ -42,7 +42,7 @@ These are supplied demo illustrations, so the UI does not imply that they are ph
 - **Tablet (640–1023px):** two cards per row; the map moves below the card list so the result flow remains readable.
 - **Laptop and desktop (≥1024px):** three cards per row for the home recommendations and results; the map sits beside the result list above 1200px and moves below it at smaller widths.
 - The desktop search action is aligned to the right edge of the search card; when the post-search preference summary is present it occupies the left side. On mobile the action becomes a full-width stacked button.
-- Flexible `สถานที่สำหรับคุณ` results use pagination with 12 cards per page; the page size is capped below 100 and the map always represents all available places, including cards on other pages.
+- Flexible `สถานที่สำหรับคุณ` results use pagination with 12 cards per page by default; users can choose 24, 48, or 96 cards per page (`(n*2)*12`), and the page size is capped below 100. The map always represents all available places, including cards on other pages.
 
 ## Interaction and state rules
 

@@ -57,7 +57,8 @@ const defaultProfile: Profile = {
   rain: { preference: "light", weight: 1 },
   air: { weight: 3 },
 };
-const RESULT_PAGE_SIZE = 12;
+const RESULT_PAGE_SIZES = [12, 24, 48, 96] as const;
+const DEFAULT_RESULT_PAGE_SIZE = RESULT_PAGE_SIZES[0];
 
 const statusNames: Record<string, string> = { matched: "ผ่านเงื่อนไขและข้อมูลครบ", incomplete: "ข้อมูลยังไม่ครบ", not_matched: "ไม่ตรงเงื่อนไข" };
 
@@ -363,11 +364,12 @@ function PlaceCard({ item, index, onSelectPlace }: { item: Item; index: number; 
 
 function ResultGroup({ group, paginated, onSelectPlace }: { group: { mode: string; status: string; items: Item[] }; paginated: boolean; onSelectPlace: (place: Place) => void }) {
   const [page, setPage] = useState(1);
-  const visibleItems = paginated ? group.items.slice((page - 1) * RESULT_PAGE_SIZE, page * RESULT_PAGE_SIZE) : group.items;
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_RESULT_PAGE_SIZE);
+  const visibleItems = paginated ? group.items.slice((page - 1) * pageSize, page * pageSize) : group.items;
   return <div className="result-group">
     {group.status !== "matched" && <div className="result-group-heading"><h3>{statusNames[group.status] ?? group.status}</h3><span>{group.items.length} แห่ง</span></div>}
     <div className="group-cards">{visibleItems.map((item, index) => <PlaceCard item={item} index={index} onSelectPlace={onSelectPlace} key={`${group.status}-${item.placeId}`} />)}</div>
-    {paginated && group.items.length > RESULT_PAGE_SIZE && <div className="results-pagination"><Pagination current={page} pageSize={RESULT_PAGE_SIZE} total={group.items.length} onChange={setPage} showSizeChanger={false} responsive showLessItems /></div>}
+    {paginated && group.items.length > DEFAULT_RESULT_PAGE_SIZE && <div className="results-pagination"><Pagination current={page} pageSize={pageSize} total={group.items.length} onChange={setPage} onShowSizeChange={(_, nextPageSize) => { setPage(1); setPageSize(nextPageSize); }} pageSizeOptions={RESULT_PAGE_SIZES.map(String)} showSizeChanger responsive showLessItems /></div>}
   </div>;
 }
 
