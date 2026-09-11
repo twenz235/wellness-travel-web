@@ -281,7 +281,7 @@ export default function Home() {
 
       {!results && <section className="inspiration-section" aria-label="สถานที่แนะนำ">
         <div className="results-heading"><div><h2>สถานที่แนะนำ</h2></div></div>
-        {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่ตามความชอบของคุณ…</span></div>}
+        {homeLoading && <div className="home-recommendation-loading"><Spin /> <span>กำลังจัดอันดับสถานที่จากค่ากลางของระบบ…</span></div>}
         {!homeLoading && homeItems.length > 0 && <div className="group-cards home-recommendation-grid">
           {homeItems.map((item, index) => <PlaceCard item={item} index={index} key={`home-${item.placeId}`} />)}
         </div>}
