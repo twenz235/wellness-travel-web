@@ -40,7 +40,7 @@ type ApiResponse = {
   scoringVersion: string;
   generatedAt: string;
   timezone: string;
-  search: { kind: string; startDate: string; endDate: string; tripDays: number; mode: string };
+  search: { kind: string; startDate: string; endDate: string; tripDays: number; mode: string; scoringProfile?: "system" | "user" };
   groups: { mode: string; status: string; items: Item[] }[];
   warnings: string[];
 };
@@ -127,7 +127,7 @@ export default function Home() {
         dates: null,
         tripDays: profile.tripDays,
         period: "day",
-        preferences: { temperature: profile.temperature, rain: profile.rain, air: profile.air },
+        scoringProfile: "system",
         requirements: { placeType: "national_park" },
       }),
     })
@@ -186,6 +186,7 @@ export default function Home() {
           dates: range ? { startDate: range[0].format("YYYY-MM-DD"), endDate: range[1].format("YYYY-MM-DD") } : null,
           tripDays: profile.tripDays,
           period: "all",
+          scoringProfile: "user",
           preferences: { temperature: profile.temperature, rain: profile.rain, air: profile.air },
           requirements: { placeType: "national_park" },
         }),
